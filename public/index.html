@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnQuest - Gamified Learning Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>CORTEXA
+            </a>
+            <div class="d-flex align-items-center">
+                <div class="user-points me-3">
+                    <i class="fas fa-star text-warning"></i>
+                    <span id="userPoints">0</span> Points
+                </div>
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Main Content Area -->
+            <div class="col-lg-8">
+                <!-- Progress Section -->
+                <div class="card progress-card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="mb-0">Course Progress</h5>
+                            <span class="badge bg-primary" id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="mt-2 text-muted small">
+                            <span id="completedLessons">0</span> of <span id="totalLessons">10</span> lessons completed
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Badges Section -->
+                <div class="card badges-card mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-3">Your Badges</h5>
+                        <div class="badges-container" id="badgesContainer">
+                            <div class="badge-item locked" data-badge="starter">
+                                <div class="badge-icon">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
+                                <div class="badge-name">Starter</div>
+                            </div>
+                            <div class="badge-item locked" data-badge="achiever">
+                                <div class="badge-icon">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <div class="badge-name">Achiever</div>
+                            </div>
+                            <div class="badge-item locked" data-badge="master">
+                                <div class="badge-icon">
+                                    <i class="fas fa-crown"></i>
+                                </div>
+                                <div class="badge-name">Master</div>
+                            </div>
+                            <div class="badge-item locked" data-badge="champion">
+                                <div class="badge-icon">
+                                    <i class="fas fa-medal"></i>
+                                </div>
+                                <div class="badge-name">Champion</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Section -->
+                <div class="card quiz-card">
+                    <div class="card-body">
+                        <div class="quiz-header mb-4">
+                            <h4 id="quizTitle">JavaScript Fundamentals - Lesson 1</h4>
+                            <div class="quiz-meta">
+                                <span class="badge bg-info"><i class="fas fa-clock me-1"></i>5 Questions</span>
+                                <span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>50 Points</span>
+                            </div>
+                        </div>
+
+                        <div id="quizContainer">
+                            <div class="question-card">
+                                <h5 class="question-number">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></h5>
+                                <p class="question-text" id="questionText">What is the correct syntax to declare a variable in JavaScript?</p>
+                                
+                                <div class="options-container" id="optionsContainer">
+                                    <div class="option-item" data-answer="var x = 5;">
+                                        <input type="radio" name="answer" id="option1" value="var x = 5;">
+                                        <label for="option1">var x = 5;</label>
+                                    </div>
+                                    <div class="option-item" data-answer="variable x = 5;">
+                                        <input type="radio" name="answer" id="option2" value="variable x = 5;">
+                                        <label for="option2">variable x = 5;</label>
+                                    </div>
+                                    <div class="option-item" data-answer="v x = 5;">
+                                        <input type="radio" name="answer" id="option3" value="v x = 5;">
+                                        <label for="option3">v x = 5;</label>
+                                    </div>
+                                    <div class="option-item" data-answer="x := 5;">
+                                        <input type="radio" name="answer" id="option4" value="x := 5;">
+                                        <label for="option4">x := 5;</label>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button class="btn btn-secondary" id="prevBtn" disabled>
+                                        <i class="fas fa-arrow-left me-2"></i>Previous
+                                    </button>
+                                    <button class="btn btn-primary" id="nextBtn">
+                                        Next<i class="fas fa-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Leaderboard -->
+                <div class="card leaderboard-card">
+                    <div class="card-body">
+                        <h5 class="mb-3">
+                            <i class="fas fa-ranking-star me-2"></i>Leaderboard
+                        </h5>
+                        <div class="leaderboard-list" id="leaderboardList">
+                            <!-- Leaderboard items will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content success-modal">
+                <div class="modal-body text-center">
+                    <div class="success-icon mb-3">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="mb-3">Congratulations!</h3>
+                    <p class="mb-3">You've completed the lesson successfully!</p>
+                    
+                    <div class="reward-display mb-4">
+                        <div class="points-earned">
+                            <i class="fas fa-star text-warning"></i>
+                            <span class="display-4">+<span id="pointsEarned">50</span></span>
+                            <div class="text-muted">Points Earned</div>
+                        </div>
+                    </div>
+
+                    <div id="newBadgeContainer" class="new-badge-container mb-3" style="display: none;">
+                        <h5>New Badge Unlocked!</h5>
+                        <div class="badge-showcase" id="badgeShowcase">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="badge-name-showcase" id="badgeNameShowcase">Achiever</div>
+                    </div>
+
+                    <button type="button" class="btn btn-lg btn-primary" id="continueBtn">
+                        Continue Learning<i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-white border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span id="toastMessage">Great job! You earned 10 points!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
