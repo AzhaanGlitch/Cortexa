@@ -3,198 +3,231 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LearnQuest - Gamified Learning Platform</title>
+    <title>Dashboard - CORTEXA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-graduation-cap me-2"></i>CORTEXA
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-brain me-2"></i>CORTEXA
             </a>
-            <div class="d-flex align-items-center">
-                <div class="user-points me-3">
-                    <i class="fas fa-star text-warning"></i>
-                    <span id="userPoints">0</span> Points
-                </div>
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="courses.html">
+                            <i class="fas fa-book me-1"></i>Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="challenges.html">
+                            <i class="fas fa-trophy me-1"></i>Challenges
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="leaderboard.html">
+                            <i class="fas fa-ranking-star me-1"></i>Leaderboard
+                        </a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <div class="user-points-nav">
+                            <i class="fas fa-star text-warning"></i>
+                            <span id="navPoints">0</span>
+                        </div>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="nav-link" href="profile.html">
+                            <div class="user-avatar-small">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="row">
-            <!-- Main Content Area -->
-            <div class="col-lg-8">
-                <!-- Progress Section -->
-                <div class="card progress-card mb-4">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h5 class="mb-0">Course Progress</h5>
-                            <span class="badge bg-primary" id="progressPercent">0%</span>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container-fluid">
+            <!-- Welcome Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="welcome-banner">
+                        <div class="welcome-content">
+                            <h1 class="welcome-title">Welcome back, <span id="userName">Learner</span>!</h1>
+                            <p class="welcome-subtitle">Ready to level up your skills today?</p>
                         </div>
-                        <div class="progress-bar-custom">
-                            <div class="progress-fill" id="progressFill"></div>
-                        </div>
-                        <div class="mt-2 text-muted small">
-                            <span id="completedLessons">0</span> of <span id="totalLessons">10</span> lessons completed
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Badges Section -->
-                <div class="card badges-card mb-4">
-                    <div class="card-body">
-                        <h5 class="mb-3">Your Badges</h5>
-                        <div class="badges-container" id="badgesContainer">
-                            <div class="badge-item locked" data-badge="starter">
-                                <div class="badge-icon">
-                                    <i class="fas fa-rocket"></i>
-                                </div>
-                                <div class="badge-name">Starter</div>
+                        <div class="welcome-stats">
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalPoints">0</div>
+                                <div class="stat-label">Total Points</div>
                             </div>
-                            <div class="badge-item locked" data-badge="achiever">
-                                <div class="badge-icon">
-                                    <i class="fas fa-trophy"></i>
-                                </div>
-                                <div class="badge-name">Achiever</div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="coursesCompleted">0</div>
+                                <div class="stat-label">Courses Done</div>
                             </div>
-                            <div class="badge-item locked" data-badge="master">
-                                <div class="badge-icon">
-                                    <i class="fas fa-crown"></i>
-                                </div>
-                                <div class="badge-name">Master</div>
-                            </div>
-                            <div class="badge-item locked" data-badge="champion">
-                                <div class="badge-icon">
-                                    <i class="fas fa-medal"></i>
-                                </div>
-                                <div class="badge-name">Champion</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quiz Section -->
-                <div class="card quiz-card">
-                    <div class="card-body">
-                        <div class="quiz-header mb-4">
-                            <h4 id="quizTitle">JavaScript Fundamentals - Lesson 1</h4>
-                            <div class="quiz-meta">
-                                <span class="badge bg-info"><i class="fas fa-clock me-1"></i>5 Questions</span>
-                                <span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>50 Points</span>
-                            </div>
-                        </div>
-
-                        <div id="quizContainer">
-                            <div class="question-card">
-                                <h5 class="question-number">Question <span id="currentQuestion">1</span> of <span id="totalQuestions">5</span></h5>
-                                <p class="question-text" id="questionText">What is the correct syntax to declare a variable in JavaScript?</p>
-                                
-                                <div class="options-container" id="optionsContainer">
-                                    <div class="option-item" data-answer="var x = 5;">
-                                        <input type="radio" name="answer" id="option1" value="var x = 5;">
-                                        <label for="option1">var x = 5;</label>
-                                    </div>
-                                    <div class="option-item" data-answer="variable x = 5;">
-                                        <input type="radio" name="answer" id="option2" value="variable x = 5;">
-                                        <label for="option2">variable x = 5;</label>
-                                    </div>
-                                    <div class="option-item" data-answer="v x = 5;">
-                                        <input type="radio" name="answer" id="option3" value="v x = 5;">
-                                        <label for="option3">v x = 5;</label>
-                                    </div>
-                                    <div class="option-item" data-answer="x := 5;">
-                                        <input type="radio" name="answer" id="option4" value="x := 5;">
-                                        <label for="option4">x := 5;</label>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex justify-content-between mt-4">
-                                    <button class="btn btn-secondary" id="prevBtn" disabled>
-                                        <i class="fas fa-arrow-left me-2"></i>Previous
-                                    </button>
-                                    <button class="btn btn-primary" id="nextBtn">
-                                        Next<i class="fas fa-arrow-right ms-2"></i>
-                                    </button>
-                                </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="currentStreak">0</div>
+                                <div class="stat-label">Day Streak</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Sidebar -->
-            <div class="col-lg-4">
-                <!-- Leaderboard -->
-                <div class="card leaderboard-card">
-                    <div class="card-body">
-                        <h5 class="mb-3">
-                            <i class="fas fa-ranking-star me-2"></i>Leaderboard
-                        </h5>
-                        <div class="leaderboard-list" id="leaderboardList">
-                            <!-- Leaderboard items will be populated by JS -->
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="courses.html" class="quick-action-card">
+                        <div class="action-icon blue">
+                            <i class="fas fa-book-open"></i>
                         </div>
-                    </div>
+                        <h5>Browse Courses</h5>
+                        <p>Explore new topics</p>
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="challenges.html" class="quick-action-card">
+                        <div class="action-icon orange">
+                            <i class="fas fa-target"></i>
+                        </div>
+                        <h5>Daily Challenge</h5>
+                        <p>Test your knowledge</p>
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="leaderboard.html" class="quick-action-card">
+                        <div class="action-icon purple">
+                            <i class="fas fa-ranking-star"></i>
+                        </div>
+                        <h5>Leaderboard</h5>
+                        <p>Check your rank</p>
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <a href="profile.html" class="quick-action-card">
+                        <div class="action-icon cyan">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <h5>My Profile</h5>
+                        <p>View achievements</p>
+                    </a>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Success Modal -->
-    <div class="modal fade" id="successModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content success-modal">
-                <div class="modal-body text-center">
-                    <div class="success-icon mb-3">
-                        <i class="fas fa-check-circle"></i>
+            <div class="row">
+                <!-- Main Column -->
+                <div class="col-lg-8">
+                    <!-- Continue Learning -->
+                    <div class="section-header mb-3">
+                        <h3><i class="fas fa-play-circle me-2"></i>Continue Learning</h3>
                     </div>
-                    <h3 class="mb-3">Congratulations!</h3>
-                    <p class="mb-3">You've completed the lesson successfully!</p>
-                    
-                    <div class="reward-display mb-4">
-                        <div class="points-earned">
-                            <i class="fas fa-star text-warning"></i>
-                            <span class="display-4">+<span id="pointsEarned">50</span></span>
-                            <div class="text-muted">Points Earned</div>
+                    <div class="row mb-4" id="continueCoursesContainer">
+                        <!-- Dynamic content -->
+                    </div>
+
+                    <!-- Recent Achievements -->
+                    <div class="section-header mb-3">
+                        <h3><i class="fas fa-award me-2"></i>Recent Achievements</h3>
+                    </div>
+                    <div class="achievements-grid mb-4" id="recentAchievements">
+                        <!-- Dynamic content -->
+                    </div>
+
+                    <!-- Activity Chart -->
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <h5 class="mb-4"><i class="fas fa-chart-line me-2"></i>Your Progress This Week</h5>
+                            <canvas id="activityChart" height="80"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Today's Challenge -->
+                    <div class="card dashboard-card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0"><i class="fas fa-fire text-danger me-2"></i>Today's Challenge</h5>
+                                <span class="badge bg-danger">Hot</span>
+                            </div>
+                            <div class="challenge-preview">
+                                <div class="challenge-icon">
+                                    <i class="fas fa-code"></i>
+                                </div>
+                                <h6 class="mt-3">JavaScript Master</h6>
+                                <p class="text-muted small mb-3">Complete 5 JS questions</p>
+                                <div class="challenge-progress mb-3">
+                                    <div class="progress-bar-slim">
+                                        <div class="progress-bar-fill" style="width: 40%"></div>
+                                    </div>
+                                    <span class="small text-muted">2/5 completed</span>
+                                </div>
+                                <a href="challenges.html" class="btn btn-sm btn-primary w-100">
+                                    Start Challenge
+                                </a>
+                            </div>
                         </div>
                     </div>
 
-                    <div id="newBadgeContainer" class="new-badge-container mb-3" style="display: none;">
-                        <h5>New Badge Unlocked!</h5>
-                        <div class="badge-showcase" id="badgeShowcase">
-                            <i class="fas fa-trophy"></i>
+                    <!-- Mini Leaderboard -->
+                    <div class="card dashboard-card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Top Performers</h5>
+                                <a href="leaderboard.html" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                            <div class="mini-leaderboard" id="miniLeaderboard">
+                                <!-- Dynamic content -->
+                            </div>
                         </div>
-                        <div class="badge-name-showcase" id="badgeNameShowcase">Achiever</div>
                     </div>
 
-                    <button type="button" class="btn btn-lg btn-primary" id="continueBtn">
-                        Continue Learning<i class="fas fa-arrow-right ms-2"></i>
-                    </button>
+                    <!-- Level Progress -->
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <h5 class="mb-3"><i class="fas fa-level-up-alt me-2"></i>Level Progress</h5>
+                            <div class="level-display">
+                                <div class="current-level">
+                                    <div class="level-number" id="userLevel">1</div>
+                                    <div class="level-label">Level</div>
+                                </div>
+                                <div class="level-progress-bar">
+                                    <div class="progress-bar-slim mb-2">
+                                        <div class="progress-bar-fill" id="levelProgressBar" style="width: 35%"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between small text-muted">
+                                        <span id="currentLevelPoints">350 XP</span>
+                                        <span id="nextLevelPoints">1000 XP</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="text-center mt-3 mb-0 text-muted small">
+                                <span id="pointsToNextLevel">650</span> points to next level
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div class="toast-container position-fixed top-0 end-0 p-3">
-        <div id="successToast" class="toast align-items-center text-white border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <span id="toastMessage">Great job! You earned 10 points!</span>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="common.js"></script>
+    <script src="dashboard.js"></script>
 </body>
 </html>
