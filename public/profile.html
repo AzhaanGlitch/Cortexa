@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - CORTEXA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-brain me-2"></i>CORTEXA
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="courses.html">
+                            <i class="fas fa-book me-1"></i>Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="challenges.html">
+                            <i class="fas fa-trophy me-1"></i>Challenges
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="leaderboard.html">
+                            <i class="fas fa-ranking-star me-1"></i>Leaderboard
+                        </a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <div class="user-points-nav">
+                            <i class="fas fa-star text-warning"></i>
+                            <span id="navPoints">0</span>
+                        </div>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="nav-link active" href="profile.html">
+                            <div class="user-avatar-small">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <div class="row">
+                <!-- Profile Header -->
+                <div class="col-12 mb-4">
+                    <div class="profile-header">
+                        <div class="profile-avatar-large">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h1 id="profileName">Learner</h1>
+                            <p class="lead mb-2" id="profileTitle">Level <span id="profileLevel">3</span> Scholar</p>
+                            <div class="profile-stats">
+                                <div class="stat-badge">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <strong id="profilePoints">350</strong> Points
+                                </div>
+                                <div class="stat-badge">
+                                    <i class="fas fa-fire text-danger"></i>
+                                    <strong id="profileStreak">5</strong> Day Streak
+                                </div>
+                                <div class="stat-badge">
+                                    <i class="fas fa-graduation-cap text-primary"></i>
+                                    <strong id="profileCourses">2</strong> Courses
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="col-lg-8">
+                    <!-- Achievements Section -->
+                    <div class="card dashboard-card mb-4">
+                        <div class="card-body">
+                            <h4 class="mb-4">
+                                <i class="fas fa-award me-2"></i>Achievements
+                                <span class="badge bg-primary ms-2" id="achievementCount">0/6</span>
+                            </h4>
+                            <div class="achievements-grid" id="profileAchievements">
+                                <!-- Achievements will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course Progress -->
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <h4 class="mb-4"><i class="fas fa-book-open me-2"></i>My Courses</h4>
+                            <div id="profileCoursesList">
+                                <!-- Courses will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Level Card -->
+                    <div class="card dashboard-card mb-4">
+                        <div class="card-body text-center">
+                            <h5 class="mb-4"><i class="fas fa-level-up-alt me-2"></i>Level Progress</h5>
+                            <div class="level-circle" id="levelCircle">
+                                <div class="level-number" id="sidebarLevel">3</div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="progress-bar-slim mb-2">
+                                    <div class="progress-bar-fill" id="sidebarLevelProgress" style="width: 35%"></div>
+                                </div>
+                                <p class="text-muted mb-0">
+                                    <span id="sidebarPointsToNext">650</span> points to Level 4
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <h5 class="mb-3"><i class="fas fa-clock me-2"></i>Recent Activity</h5>
+                            <div class="activity-list" id="recentActivity">
+                                <!-- Activity items will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="common.js"></script>
+    <script src="profile.js"></script>
+</body>
+</html>
