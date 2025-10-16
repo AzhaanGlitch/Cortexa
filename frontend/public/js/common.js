@@ -1,331 +1,121 @@
-// Global State Management
+// Global State Management with Backend Integration
 const AppState = {
-    user: {
-        name: 'Learner',
-        points: 0,
-        level: 1,
-        streak: 0,
-        coursesCompleted: 0,
-        badges: []
-    },
+    user: null,
     courses: [],
     leaderboard: [],
     achievements: [],
     challenges: []
 };
 
-// Initialize state from memory or create default
-function initializeAppState() {
-    // In a real app, this would load from a backend/database
-    // For now, we'll use in-memory state
-    
-    if (!AppState.user.points) {
-        AppState.user = {
-            name: 'Learner',
-            points: 350,
-            level: 3,
-            streak: 5,
-            coursesCompleted: 2,
-            badges: ['starter', 'fast-learner']
-        };
+const API_URL = 'http://localhost:5000/api';
+
+// Initialize app state from backend
+async function initializeAppState() {
+    try {
+        // Check if authenticated
+        if (!auth.isAuthenticated()) {
+            return;
+        }
+
+        // Get current user
+        const userData = await apiRequest('/auth/me');
+        AppState.user = userData.user;
+
+        // Load courses
+        const coursesData = await apiRequest('/courses');
+        AppState.courses = coursesData.courses;
+
+        // Load leaderboard
+        const leaderboardData = await apiRequest('/leaderboard');
+        AppState.leaderboard = leaderboardData.leaderboard;
+
+        // Load achievements
+        AppState.achievements = [
+            {
+                id: 'starter',
+                name: 'Starter',
+                description: 'Complete your first lesson',
+                icon: 'fa-rocket',
+                unlocked: AppState.user.achievements.some(a => a.achievementId === 'starter'),
+                points: 50
+            },
+            {
+                id: 'fast-learner',
+                name: 'Fast Learner',
+                description: 'Complete 5 lessons in one day',
+                icon: 'fa-bolt',
+                unlocked: AppState.user.achievements.some(a => a.achievementId === 'fast-learner'),
+                points: 100
+            },
+            {
+                id: 'dedicated',
+                name: 'Dedicated',
+                description: 'Maintain a 7-day streak',
+                icon: 'fa-fire',
+                unlocked: AppState.user.achievements.some(a => a.achievementId === 'dedicated'),
+                points: 150
+            },
+            {
+                id: 'master',
+                name: 'Master',
+                description: 'Complete 5 courses',
+                icon: 'fa-crown',
+                unlocked: AppState.user.achievements.some(a => a.achievementId === 'master'),
+                points: 300
+            },
+            {
+                id: 'perfectionist',
+                name: 'Perfectionist',
+                description: 'Score 100% on 10 quizzes',
+                icon: 'fa-star',
+                unlocked: AppState.user.achievements.some(a => a.achievementId === 'perfectionist'),
+                points: 200
+            },
+            {
+                id: 'champion',
+                name: 'Champion',
+                description: 'Reach the top of leaderboard',
+                icon: 'fa-trophy',
+                unlocked: AppState.user.achievements.some(a => a.achievementId === 'champion'),
+                points: 500
+            }
+        ];
+
+        updateNavPoints();
+    } catch (error) {
+        console.error('Error initializing app state:', error);
     }
-    
-    // Initialize courses
-    AppState.courses = [
-        {
-            id: 1,
-            title: 'JavaScript Fundamentals',
-            category: 'programming',
-            description: 'Master the basics of JavaScript programming',
-            duration: '4 weeks',
-            level: 'Beginner',
-            lessons: 24,
-            points: 500,
-            enrolled: 2547,
-            progress: 45,
-            status: 'in-progress',
-            icon: 'fa-js',
-            color: 'linear-gradient(135deg, #f7df1e, #f0db4f)',
-            objectives: [
-                'Understand variables, data types, and operators',
-                'Work with functions and scope',
-                'Master arrays and objects',
-                'Handle events and DOM manipulation'
-            ],
-            curriculum: [
-                { title: 'Introduction to JavaScript', duration: '45 min', icon: 'fa-play-circle' },
-                { title: 'Variables and Data Types', duration: '1 hour', icon: 'fa-book' },
-                { title: 'Control Flow and Loops', duration: '1.5 hours', icon: 'fa-code' },
-                { title: 'Functions Deep Dive', duration: '2 hours', icon: 'fa-cog' }
-            ]
-        },
-        {
-            id: 2,
-            title: 'React for Beginners',
-            category: 'programming',
-            description: 'Build modern web applications with React',
-            duration: '6 weeks',
-            level: 'Intermediate',
-            lessons: 32,
-            points: 750,
-            enrolled: 1823,
-            progress: 0,
-            status: 'new',
-            icon: 'fa-react',
-            color: 'linear-gradient(135deg, #61dafb, #21a1c4)',
-            objectives: [
-                'Understand React components and props',
-                'Master state management with hooks',
-                'Build reusable UI components',
-                'Create full-stack applications'
-            ],
-            curriculum: [
-                { title: 'React Basics', duration: '1 hour', icon: 'fa-play-circle' },
-                { title: 'Components and Props', duration: '1.5 hours', icon: 'fa-puzzle-piece' },
-                { title: 'State and Lifecycle', duration: '2 hours', icon: 'fa-sync' },
-                { title: 'Hooks in Depth', duration: '2 hours', icon: 'fa-link' }
-            ]
-        },
-        {
-            id: 3,
-            title: 'Python Programming',
-            category: 'programming',
-            description: 'Learn Python from scratch to advanced',
-            duration: '8 weeks',
-            level: 'Beginner',
-            lessons: 40,
-            points: 800,
-            enrolled: 3421,
-            progress: 100,
-            status: 'completed',
-            icon: 'fa-python',
-            color: 'linear-gradient(135deg, #3776ab, #ffd343)',
-            objectives: [
-                'Master Python syntax and fundamentals',
-                'Work with data structures',
-                'Object-oriented programming',
-                'File handling and databases'
-            ],
-            curriculum: [
-                { title: 'Python Basics', duration: '1 hour', icon: 'fa-play-circle' },
-                { title: 'Data Structures', duration: '2 hours', icon: 'fa-database' },
-                { title: 'OOP Concepts', duration: '2.5 hours', icon: 'fa-object-group' },
-                { title: 'Advanced Topics', duration: '3 hours', icon: 'fa-rocket' }
-            ]
-        },
-        {
-            id: 4,
-            title: 'UI/UX Design Principles',
-            category: 'design',
-            description: 'Create beautiful and functional user interfaces',
-            duration: '5 weeks',
-            level: 'Beginner',
-            lessons: 28,
-            points: 600,
-            enrolled: 1654,
-            progress: 0,
-            status: 'new',
-            icon: 'fa-pencil-ruler',
-            color: 'linear-gradient(135deg, #ff6b6b, #ee5a6f)',
-            objectives: [
-                'Understand design principles',
-                'Master color theory and typography',
-                'Create user-centered designs',
-                'Prototype and test designs'
-            ],
-            curriculum: [
-                { title: 'Design Fundamentals', duration: '1 hour', icon: 'fa-paint-brush' },
-                { title: 'Color and Typography', duration: '1.5 hours', icon: 'fa-palette' },
-                { title: 'User Research', duration: '2 hours', icon: 'fa-users' },
-                { title: 'Prototyping', duration: '2 hours', icon: 'fa-drafting-compass' }
-            ]
-        },
-        {
-            id: 5,
-            title: 'Data Science with Python',
-            category: 'data',
-            description: 'Analyze data and build machine learning models',
-            duration: '10 weeks',
-            level: 'Advanced',
-            lessons: 48,
-            points: 1000,
-            enrolled: 2134,
-            progress: 15,
-            status: 'in-progress',
-            icon: 'fa-chart-bar',
-            color: 'linear-gradient(135deg, #667eea, #764ba2)',
-            objectives: [
-                'Master data analysis with pandas',
-                'Visualize data effectively',
-                'Build ML models with scikit-learn',
-                'Deep learning basics with TensorFlow'
-            ],
-            curriculum: [
-                { title: 'Data Analysis Basics', duration: '2 hours', icon: 'fa-table' },
-                { title: 'Data Visualization', duration: '2 hours', icon: 'fa-chart-line' },
-                { title: 'Machine Learning', duration: '3 hours', icon: 'fa-brain' },
-                { title: 'Deep Learning', duration: '4 hours', icon: 'fa-network-wired' }
-            ]
-        },
-        {
-            id: 6,
-            title: 'Digital Marketing Strategy',
-            category: 'marketing',
-            description: 'Master online marketing and grow your business',
-            duration: '6 weeks',
-            level: 'Intermediate',
-            lessons: 30,
-            points: 650,
-            enrolled: 1987,
-            progress: 0,
-            status: 'new',
-            icon: 'fa-bullhorn',
-            color: 'linear-gradient(135deg, #f093fb, #f5576c)',
-            objectives: [
-                'Understand digital marketing channels',
-                'Create effective campaigns',
-                'Analyze marketing metrics',
-                'Optimize for conversions'
-            ],
-            curriculum: [
-                { title: 'Marketing Fundamentals', duration: '1.5 hours', icon: 'fa-lightbulb' },
-                { title: 'Social Media Marketing', duration: '2 hours', icon: 'fa-share-alt' },
-                { title: 'SEO and Content', duration: '2 hours', icon: 'fa-search' },
-                { title: 'Analytics', duration: '2 hours', icon: 'fa-chart-pie' }
-            ]
-        }
-    ];
-    
-    // Initialize leaderboard
-    AppState.leaderboard = [
-        { name: 'Alex Thunder', points: 5240, level: 12, avatar: 'AT', rank: 1 },
-        { name: 'Sarah Chen', points: 4890, level: 11, avatar: 'SC', rank: 2 },
-        { name: 'Marcus Steel', points: 4560, level: 10, avatar: 'MS', rank: 3 },
-        { name: 'Emma Watson', points: 3980, level: 9, avatar: 'EW', rank: 4 },
-        { name: 'David Kim', points: 3750, level: 9, avatar: 'DK', rank: 5 },
-        { name: 'Lisa Park', points: 3420, level: 8, avatar: 'LP', rank: 6 },
-        { name: 'You', points: AppState.user.points, level: AppState.user.level, avatar: 'ME', rank: 7, isCurrentUser: true },
-        { name: 'John Doe', points: 2890, level: 7, avatar: 'JD', rank: 8 },
-        { name: 'Anna Lee', points: 2540, level: 6, avatar: 'AL', rank: 9 },
-        { name: 'Mike Ross', points: 2180, level: 6, avatar: 'MR', rank: 10 }
-    ];
-    
-    // Initialize achievements
-    AppState.achievements = [
-        {
-            id: 'starter',
-            name: 'Starter',
-            description: 'Complete your first lesson',
-            icon: 'fa-rocket',
-            unlocked: true,
-            points: 50
-        },
-        {
-            id: 'fast-learner',
-            name: 'Fast Learner',
-            description: 'Complete 5 lessons in one day',
-            icon: 'fa-bolt',
-            unlocked: true,
-            points: 100
-        },
-        {
-            id: 'dedicated',
-            name: 'Dedicated',
-            description: 'Maintain a 7-day streak',
-            icon: 'fa-fire',
-            unlocked: false,
-            points: 150
-        },
-        {
-            id: 'master',
-            name: 'Master',
-            description: 'Complete 5 courses',
-            icon: 'fa-crown',
-            unlocked: false,
-            points: 300
-        },
-        {
-            id: 'perfectionist',
-            name: 'Perfectionist',
-            description: 'Score 100% on 10 quizzes',
-            icon: 'fa-star',
-            unlocked: false,
-            points: 200
-        },
-        {
-            id: 'champion',
-            name: 'Champion',
-            description: 'Reach the top of leaderboard',
-            icon: 'fa-trophy',
-            unlocked: false,
-            points: 500
-        }
-    ];
-    
-    // Initialize challenges
-    AppState.challenges = [
-        {
-            id: 1,
-            title: 'JavaScript Master',
-            description: 'Complete 5 JavaScript questions',
-            difficulty: 'easy',
-            progress: 2,
-            total: 5,
-            points: 100,
-            icon: 'fa-code',
-            timeLeft: '12 hours'
-        },
-        {
-            id: 2,
-            title: 'Speed Demon',
-            description: 'Complete 3 lessons in under 2 hours',
-            difficulty: 'medium',
-            progress: 0,
-            total: 3,
-            points: 200,
-            icon: 'fa-clock',
-            timeLeft: '8 hours'
-        },
-        {
-            id: 3,
-            title: 'Perfect Score',
-            description: 'Get 100% on any quiz',
-            difficulty: 'hard',
-            progress: 0,
-            total: 1,
-            points: 300,
-            icon: 'fa-star',
-            timeLeft: '24 hours'
-        }
-    ];
-    
-    updateNavPoints();
 }
 
 // Update navigation points display
 function updateNavPoints() {
     const navPointsEl = document.getElementById('navPoints');
-    if (navPointsEl) {
+    if (navPointsEl && AppState.user) {
         navPointsEl.textContent = AppState.user.points;
     }
 }
 
 // Update user points
-function updateUserPoints(points) {
-    AppState.user.points += points;
-    updateNavPoints();
-    checkLevelUp();
-    showToast(`+${points} points earned!`, 'success');
+async function updateUserPoints(points) {
+    try {
+        const response = await apiRequest('/users/points', {
+            method: 'PUT',
+            body: JSON.stringify({ points })
+        });
+
+        AppState.user.points = response.points;
+        AppState.user.level = response.level;
+        updateNavPoints();
+        checkLevelUp();
+        showToast(`+${points} points earned!`, 'success');
+    } catch (error) {
+        console.error('Error updating points:', error);
+    }
 }
 
 // Calculate level from points
 function calculateLevel(points) {
     return Math.floor(points / 1000) + 1;
-}
-
-// Calculate points needed for next level
-function calculateNextLevelPoints(level) {
-    return level * 1000;
 }
 
 // Check if user leveled up
@@ -343,13 +133,22 @@ function showLevelUpModal(level) {
 }
 
 // Check for badge unlock
-function checkBadgeUnlock(badgeId) {
-    const badge = AppState.achievements.find(a => a.id === badgeId);
-    if (badge && !badge.unlocked) {
-        badge.unlocked = true;
-        AppState.user.badges.push(badgeId);
-        showBadgeUnlock(badge);
-        updateUserPoints(badge.points);
+async function checkBadgeUnlock(badgeId) {
+    try {
+        const badge = AppState.achievements.find(a => a.id === badgeId);
+        if (badge && !badge.unlocked) {
+            const response = await apiRequest('/users/achievements', {
+                method: 'POST',
+                body: JSON.stringify({ achievementId: badgeId, points: badge.points })
+            });
+
+            if (response.unlocked) {
+                badge.unlocked = true;
+                showBadgeUnlock(badge);
+            }
+        }
+    } catch (error) {
+        console.error('Error unlocking badge:', error);
     }
 }
 
@@ -408,32 +207,6 @@ function createToastContainer() {
     return container;
 }
 
-// Format duration
-function formatDuration(minutes) {
-    if (minutes < 60) {
-        return `${minutes} min`;
-    }
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-}
-
-// Get rank class
-function getRankClass(rank) {
-    if (rank === 1) return 'gold';
-    if (rank === 2) return 'silver';
-    if (rank === 3) return 'bronze';
-    return 'default';
-}
-
-// Sort and update leaderboard rankings
-function updateLeaderboardRankings() {
-    AppState.leaderboard.sort((a, b) => b.points - a.points);
-    AppState.leaderboard.forEach((user, index) => {
-        user.rank = index + 1;
-    });
-}
-
 // Filter courses by category
 function filterCoursesByCategory(category) {
     if (category === 'all') {
@@ -444,10 +217,12 @@ function filterCoursesByCategory(category) {
 
 // Filter courses by status
 function filterCoursesByStatus(status) {
-    if (status === 'all') {
-        return AppState.courses;
-    }
-    return AppState.courses.filter(course => course.status === status);
+    if (!AppState.user) return [];
+    
+    return AppState.user.enrolledCourses.map(enrolled => {
+        const course = AppState.courses.find(c => c._id === enrolled.courseId._id || c.id === enrolled.courseId);
+        return { ...course, progress: enrolled.progress, status: enrolled.completedAt ? 'completed' : 'in-progress' };
+    }).filter(course => status === 'all' || course.status === status);
 }
 
 // Search courses
@@ -462,47 +237,69 @@ function searchCourses(query) {
 
 // Get course by ID
 function getCourseById(id) {
-    return AppState.courses.find(course => course.id === parseInt(id));
+    return AppState.courses.find(course => course._id === id || course.id === id);
 }
 
-// Start course
-function startCourse(courseId) {
-    const course = getCourseById(courseId);
-    if (course) {
-        // In a real app, this would navigate to the course page
+// Start course (enroll)
+async function startCourse(courseId) {
+    try {
+        await apiRequest('/users/enroll', {
+            method: 'POST',
+            body: JSON.stringify({ courseId })
+        });
+        showToast('Enrolled successfully!', 'success');
         window.location.href = `learn.html?course=${courseId}`;
-    }
-}
-
-// Complete lesson
-function completeLesson(courseId, lessonId) {
-    const course = getCourseById(courseId);
-    if (course) {
-        // Update progress
-        const lessonsCompleted = Math.floor((course.progress / 100) * course.lessons) + 1;
-        course.progress = Math.min(100, (lessonsCompleted / course.lessons) * 100);
-        
-        // Award points
-        const pointsEarned = Math.floor(course.points / course.lessons);
-        updateUserPoints(pointsEarned);
-        
-        // Check if course completed
-        if (course.progress >= 100) {
-            course.status = 'completed';
-            AppState.user.coursesCompleted++;
-            showToast(`🎉 Course completed: ${course.title}!`, 'success', 5000);
-            checkBadgeUnlock('master');
+    } catch (error) {
+        if (error.message.includes('already enrolled')) {
+            window.location.href = `learn.html?course=${courseId}`;
+        } else {
+            showToast(error.message, 'error');
         }
     }
 }
 
-// Get activity data for chart (last 7 days)
+// Complete lesson
+async function completeLesson(courseId, lessonId, score, correctAnswers, totalQuestions) {
+    try {
+        const response = await apiRequest('/users/progress', {
+            method: 'PUT',
+            body: JSON.stringify({ 
+                courseId, 
+                lessonId, 
+                score, 
+                correctAnswers, 
+                totalQuestions 
+            })
+        });
+
+        AppState.user.points = response.points;
+        AppState.user.level = response.level;
+        updateNavPoints();
+        showToast('Lesson completed! Points earned!', 'success');
+
+        // Check for badges
+        if (score === 100) {
+            checkBadgeUnlock('perfectionist');
+        }
+
+        return response;
+    } catch (error) {
+        console.error('Error completing lesson:', error);
+        showToast(error.message, 'error');
+    }
+}
+
+// Get activity data
 function getActivityData() {
-    // Simulated data - in real app, this would come from backend
     return {
         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         data: [45, 60, 30, 75, 90, 50, 65]
     };
+}
+
+// Update leaderboard rankings
+function updateLeaderboardRankings() {
+    AppState.leaderboard.sort((a, b) => b.points - a.points);
 }
 
 // Format number with commas
@@ -510,14 +307,15 @@ function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-// Get progress color
-function getProgressColor(progress) {
-    if (progress < 30) return '#ef4444';
-    if (progress < 70) return '#f59e0b';
-    return '#10b981';
+// Get rank class
+function getRankClass(rank) {
+    if (rank === 1) return 'gold';
+    if (rank === 2) return 'silver';
+    if (rank === 3) return 'bronze';
+    return 'default';
 }
 
-// Debounce function for search
+// Debounce function
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -530,7 +328,7 @@ function debounce(func, wait) {
     };
 }
 
-// Initialize app on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     initializeAppState();
     
@@ -543,9 +341,18 @@ document.addEventListener('DOMContentLoaded', () => {
             link.classList.remove('active');
         }
     });
+    
+    // Add logout button click handler
+    const logoutBtns = document.querySelectorAll('[data-logout]');
+    logoutBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            auth.logout();
+        });
+    });
 });
 
-// Export functions for use in other scripts
+// Export functions
 window.AppState = AppState;
 window.updateUserPoints = updateUserPoints;
 window.checkBadgeUnlock = checkBadgeUnlock;
@@ -559,6 +366,5 @@ window.completeLesson = completeLesson;
 window.getActivityData = getActivityData;
 window.updateLeaderboardRankings = updateLeaderboardRankings;
 window.formatNumber = formatNumber;
-window.formatDuration = formatDuration;
 window.getRankClass = getRankClass;
 window.debounce = debounce;
