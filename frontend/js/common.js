@@ -9,91 +9,55 @@ const AppState = {
 
 const API_URL = 'http://localhost:5000/api';
 
-// Add this at the very top after other state variables
-async function initializeAppState() {
-    try {
-        // Check if authenticated
-        if (!auth.isAuthenticated()) {
-            console.log('User not authenticated');
-            return;
-        }
-
-        // Get current user data
-        const userData = await auth.apiRequest('/auth/me');
-        AppState.user = userData.user;
-
-        // Update display
-        updateNavPoints();
-
-        // Load courses
-        try {
-            const coursesData = await auth.apiRequest('/courses');
-            AppState.courses = coursesData.courses || [];
-        } catch (error) {
-            console.error('Failed to load courses:', error);
-        }
-
-    } catch (error) {
-        console.error('Error initializing app state:', error);
-        auth.logout();
-    }
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', async () => {
-    // First check auth
-    if (auth.isAuthenticated()) {
-        await initializeAppState();
-    }
-    
-    // Set active nav link
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.getAttribute('href') === currentPage) {
-            link.classList.add('active');
-        } else {
-            link.classList.remove('active');
-        }
-    });
-    
-    // Add logout button click handler
-    const logoutBtns = document.querySelectorAll('[data-logout]');
-    logoutBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            auth.logout();
-        });
-    });
-});
-
 // Initialize app state from backend
 async function initializeAppState() {
     try {
         // Check if authenticated
         if (!auth.isAuthenticated()) {
+            console.log('User not authenticated, skipping app state init');
             return;
         }
 
-        // Get current user
-        const userData = await apiRequest('/auth/me');
-        AppState.user = userData.user;
+        console.log('Initializing app state...');
+
+        // Get current user data from backend
+        try {
+            const userData = await auth.apiRequest('/auth/me');
+            AppState.user = userData.user;
+            console.log('User data loaded:', AppState.user);
+            updateNavPoints();
+        } catch (error) {
+            console.error('Failed to load user data:', error);
+            auth.logout();
+            return;
+        }
 
         // Load courses
-        const coursesData = await apiRequest('/courses');
-        AppState.courses = coursesData.courses;
+        try {
+            const coursesData = await auth.apiRequest('/courses');
+            AppState.courses = coursesData.courses || [];
+            console.log('Courses loaded:', AppState.courses.length);
+        } catch (error) {
+            console.error('Failed to load courses:', error);
+        }
 
         // Load leaderboard
-        const leaderboardData = await apiRequest('/leaderboard');
-        AppState.leaderboard = leaderboardData.leaderboard;
+        try {
+            const leaderboardData = await auth.apiRequest('/leaderboard');
+            AppState.leaderboard = leaderboardData.leaderboard || [];
+            console.log('Leaderboard loaded:', AppState.leaderboard.length);
+        } catch (error) {
+            console.error('Failed to load leaderboard:', error);
+        }
 
-        // Load achievements
+        // Initialize achievements
         AppState.achievements = [
             {
                 id: 'starter',
                 name: 'Starter',
                 description: 'Complete your first lesson',
                 icon: 'fa-rocket',
-                unlocked: AppState.user.achievements.some(a => a.achievementId === 'starter'),
+                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'starter') : false,
                 points: 50
             },
             {
@@ -101,7 +65,7 @@ async function initializeAppState() {
                 name: 'Fast Learner',
                 description: 'Complete 5 lessons in one day',
                 icon: 'fa-bolt',
-                unlocked: AppState.user.achievements.some(a => a.achievementId === 'fast-learner'),
+                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'fast-learner') : false,
                 points: 100
             },
             {
@@ -109,7 +73,7 @@ async function initializeAppState() {
                 name: 'Dedicated',
                 description: 'Maintain a 7-day streak',
                 icon: 'fa-fire',
-                unlocked: AppState.user.achievements.some(a => a.achievementId === 'dedicated'),
+                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'dedicated') : false,
                 points: 150
             },
             {
@@ -117,7 +81,7 @@ async function initializeAppState() {
                 name: 'Master',
                 description: 'Complete 5 courses',
                 icon: 'fa-crown',
-                unlocked: AppState.user.achievements.some(a => a.achievementId === 'master'),
+                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'master') : false,
                 points: 300
             },
             {
@@ -125,7 +89,7 @@ async function initializeAppState() {
                 name: 'Perfectionist',
                 description: 'Score 100% on 10 quizzes',
                 icon: 'fa-star',
-                unlocked: AppState.user.achievements.some(a => a.achievementId === 'perfectionist'),
+                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'perfectionist') : false,
                 points: 200
             },
             {
@@ -133,12 +97,13 @@ async function initializeAppState() {
                 name: 'Champion',
                 description: 'Reach the top of leaderboard',
                 icon: 'fa-trophy',
-                unlocked: AppState.user.achievements.some(a => a.achievementId === 'champion'),
+                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'champion') : false,
                 points: 500
             }
         ];
 
-        updateNavPoints();
+        console.log('App state initialized successfully');
+
     } catch (error) {
         console.error('Error initializing app state:', error);
     }
@@ -148,14 +113,14 @@ async function initializeAppState() {
 function updateNavPoints() {
     const navPointsEl = document.getElementById('navPoints');
     if (navPointsEl && AppState.user) {
-        navPointsEl.textContent = AppState.user.points;
+        navPointsEl.textContent = AppState.user.points || 0;
     }
 }
 
 // Update user points
 async function updateUserPoints(points) {
     try {
-        const response = await apiRequest('/users/points', {
+        const response = await auth.apiRequest('/users/points', {
             method: 'PUT',
             body: JSON.stringify({ points })
         });
@@ -167,6 +132,7 @@ async function updateUserPoints(points) {
         showToast(`+${points} points earned!`, 'success');
     } catch (error) {
         console.error('Error updating points:', error);
+        showToast(error.message, 'error');
     }
 }
 
@@ -194,7 +160,7 @@ async function checkBadgeUnlock(badgeId) {
     try {
         const badge = AppState.achievements.find(a => a.id === badgeId);
         if (badge && !badge.unlocked) {
-            const response = await apiRequest('/users/achievements', {
+            const response = await auth.apiRequest('/users/achievements', {
                 method: 'POST',
                 body: JSON.stringify({ achievementId: badgeId, points: badge.points })
             });
@@ -202,6 +168,7 @@ async function checkBadgeUnlock(badgeId) {
             if (response.unlocked) {
                 badge.unlocked = true;
                 showBadgeUnlock(badge);
+                updateUserPoints(badge.points);
             }
         }
     } catch (error) {
@@ -232,7 +199,7 @@ function showToast(message, type = 'info', duration = 3000) {
         bgClass = 'bg-danger';
         icon = 'fa-exclamation-circle';
     } else if (type === 'warning') {
-        bgClass = 'bg-warning';
+        bgClass = 'bg-warning text-dark';
         icon = 'fa-exclamation-triangle';
     }
     
@@ -272,23 +239,13 @@ function filterCoursesByCategory(category) {
     return AppState.courses.filter(course => course.category === category);
 }
 
-// Filter courses by status
-function filterCoursesByStatus(status) {
-    if (!AppState.user) return [];
-    
-    return AppState.user.enrolledCourses.map(enrolled => {
-        const course = AppState.courses.find(c => c._id === enrolled.courseId._id || c.id === enrolled.courseId);
-        return { ...course, progress: enrolled.progress, status: enrolled.completedAt ? 'completed' : 'in-progress' };
-    }).filter(course => status === 'all' || course.status === status);
-}
-
 // Search courses
 function searchCourses(query) {
     const lowerQuery = query.toLowerCase();
     return AppState.courses.filter(course => 
         course.title.toLowerCase().includes(lowerQuery) ||
-        course.description.toLowerCase().includes(lowerQuery) ||
-        course.category.toLowerCase().includes(lowerQuery)
+        (course.description && course.description.toLowerCase().includes(lowerQuery)) ||
+        (course.category && course.category.toLowerCase().includes(lowerQuery))
     );
 }
 
@@ -300,17 +257,18 @@ function getCourseById(id) {
 // Start course (enroll)
 async function startCourse(courseId) {
     try {
-        await apiRequest('/users/enroll', {
+        await auth.apiRequest('/users/enroll', {
             method: 'POST',
             body: JSON.stringify({ courseId })
         });
         showToast('Enrolled successfully!', 'success');
-        window.location.href = `learn.html?course=${courseId}`;
+        // In a real app, navigate to course page
+        window.location.href = `/learn.html?course=${courseId}`;
     } catch (error) {
-        if (error.message.includes('already enrolled')) {
-            window.location.href = `learn.html?course=${courseId}`;
+        if (error.message && error.message.includes('already enrolled')) {
+            window.location.href = `/learn.html?course=${courseId}`;
         } else {
-            showToast(error.message, 'error');
+            showToast(error.message || 'Failed to enroll', 'error');
         }
     }
 }
@@ -318,7 +276,7 @@ async function startCourse(courseId) {
 // Complete lesson
 async function completeLesson(courseId, lessonId, score, correctAnswers, totalQuestions) {
     try {
-        const response = await apiRequest('/users/progress', {
+        const response = await auth.apiRequest('/users/progress', {
             method: 'PUT',
             body: JSON.stringify({ 
                 courseId, 
@@ -342,7 +300,7 @@ async function completeLesson(courseId, lessonId, score, correctAnswers, totalQu
         return response;
     } catch (error) {
         console.error('Error completing lesson:', error);
-        showToast(error.message, 'error');
+        showToast(error.message || 'Failed to complete lesson', 'error');
     }
 }
 
@@ -356,7 +314,9 @@ function getActivityData() {
 
 // Update leaderboard rankings
 function updateLeaderboardRankings() {
-    AppState.leaderboard.sort((a, b) => b.points - a.points);
+    if (AppState.leaderboard && AppState.leaderboard.length > 0) {
+        AppState.leaderboard.sort((a, b) => b.points - a.points);
+    }
 }
 
 // Format number with commas
@@ -386,13 +346,19 @@ function debounce(func, wait) {
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-    initializeAppState();
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('DOM Content Loaded - Initializing app');
+    
+    // Initialize app state if user is authenticated
+    if (auth.isAuthenticated()) {
+        await initializeAppState();
+    }
     
     // Set active nav link
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.getAttribute('href') === currentPage) {
+        const href = link.getAttribute('href');
+        if (href === currentPage || href === '/' + currentPage) {
             link.classList.add('active');
         } else {
             link.classList.remove('active');
@@ -404,7 +370,9 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
-            auth.logout();
+            if (confirm('Are you sure you want to logout?')) {
+                auth.logout();
+            }
         });
     });
 });
@@ -415,7 +383,6 @@ window.updateUserPoints = updateUserPoints;
 window.checkBadgeUnlock = checkBadgeUnlock;
 window.showToast = showToast;
 window.filterCoursesByCategory = filterCoursesByCategory;
-window.filterCoursesByStatus = filterCoursesByStatus;
 window.searchCourses = searchCourses;
 window.getCourseById = getCourseById;
 window.startCourse = startCourse;
@@ -425,3 +392,4 @@ window.updateLeaderboardRankings = updateLeaderboardRankings;
 window.formatNumber = formatNumber;
 window.getRankClass = getRankClass;
 window.debounce = debounce;
+window.initializeAppState = initializeAppState;
