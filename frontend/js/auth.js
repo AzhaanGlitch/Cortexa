@@ -1,31 +1,40 @@
 // API Configuration
 const API_URL = 'http://localhost:5000/api';
 
-// Check authentication on page load
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize auth state checks
+function initializeAuthState() {
     const currentPath = window.location.pathname;
-    const isAuthPage = currentPath.includes('login.html') || currentPath.includes('register.html');
-    const isProtectedPage = !isAuthPage && !currentPath.includes('index.html');
-    
-    if (isAuthenticated()) {
-        // User is logged in
-        if (isAuthPage) {
-            // Redirect from login/register to dashboard
-            window.location.href = '/index.html';
-        }
-        initializeAuthForms();
-    } else {
-        // User is NOT logged in
-        if (!isAuthPage) {
-            // Redirect to login
-            window.location.href = '/login.html';
-        }
-        initializeAuthForms();
-    }
-});
+    const isAuthPage = currentPath.includes('login') || currentPath.includes('register');
+    const isAuthenticated = localStorage.getItem('token') !== null;
 
-// Initialize auth forms
-function initializeAuthForms() {
+    console.log('Current Path:', currentPath);
+    console.log('Is Auth Page:', isAuthPage);
+    console.log('Is Authenticated:', isAuthenticated);
+
+    // If user is authenticated and on auth page, redirect to dashboard
+    if (isAuthenticated && isAuthPage) {
+        console.log('User authenticated on auth page, redirecting to dashboard');
+        window.location.href = '/index.html';
+        return;
+    }
+
+    // If user is NOT authenticated and NOT on auth page, redirect to login
+    if (!isAuthenticated && !isAuthPage && currentPath !== '/') {
+        console.log('User not authenticated, redirecting to login');
+        window.location.href = '/login.html';
+        return;
+    }
+}
+
+// Check authentication on page load (run immediately)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAuthState);
+} else {
+    initializeAuthState();
+}
+
+// Initialize auth forms when they exist
+document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
 
@@ -36,17 +45,23 @@ function initializeAuthForms() {
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
     }
-}
+});
 
 // Handle login
 async function handleLogin(e) {
     e.preventDefault();
     
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const loginBtn = document.getElementById('loginBtn');
     const btnText = loginBtn.querySelector('.btn-text');
     const btnLoader = loginBtn.querySelector('.btn-loader');
+
+    // Validation
+    if (!email || !password) {
+        showError('Please fill in all fields');
+        return;
+    }
 
     // Show loading state
     btnText.style.display = 'none';
@@ -73,6 +88,8 @@ async function handleLogin(e) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
+        console.log('Login successful, user data stored');
+
         // Show success message
         showSuccess('Login successful! Redirecting...');
 
@@ -82,6 +99,7 @@ async function handleLogin(e) {
         }, 1500);
 
     } catch (error) {
+        console.error('Login error:', error);
         showError(error.message || 'Login failed. Please try again.');
         btnText.style.display = 'inline-block';
         btnLoader.style.display = 'none';
@@ -93,21 +111,30 @@ async function handleLogin(e) {
 async function handleRegister(e) {
     e.preventDefault();
     
-    const username = document.getElementById('username').value;
-    const email = document.getElementById('email').value;
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const registerBtn = document.getElementById('registerBtn');
     const btnText = registerBtn.querySelector('.btn-text');
     const btnLoader = registerBtn.querySelector('.btn-loader');
 
-    // Validate passwords match
+    // Validations
+    if (!username || !email || !password || !confirmPassword) {
+        showError('Please fill in all fields');
+        return;
+    }
+
     if (password !== confirmPassword) {
         showError('Passwords do not match!');
         return;
     }
 
-    // Validate terms checkbox
+    if (password.length < 6) {
+        showError('Password must be at least 6 characters');
+        return;
+    }
+
     if (!document.getElementById('agreeTerms').checked) {
         showError('Please agree to the terms and conditions');
         return;
@@ -138,6 +165,8 @@ async function handleRegister(e) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
+        console.log('Registration successful, user data stored');
+
         // Show success message
         showSuccess('Account created successfully! Redirecting...');
 
@@ -147,6 +176,7 @@ async function handleRegister(e) {
         }, 1500);
 
     } catch (error) {
+        console.error('Registration error:', error);
         showError(error.message || 'Registration failed. Please try again.');
         btnText.style.display = 'inline-block';
         btnLoader.style.display = 'none';
@@ -172,6 +202,7 @@ function getAuthToken() {
 
 // Logout user
 function logout() {
+    console.log('Logging out user');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/login.html';
@@ -187,6 +218,8 @@ function showError(message) {
         errorAlert.style.display = 'block';
         errorAlert.classList.remove('alert-success');
         errorAlert.classList.add('alert-danger');
+        
+        console.log('Error shown:', message);
         
         // Auto hide after 5 seconds
         setTimeout(() => {
