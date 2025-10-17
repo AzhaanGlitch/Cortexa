@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const User = require('./models/User');
-const Course = require('./models/Course');
+const User = require('../models/User');
+const Course = require('../models/Course');
 const { protect } = require('../middleware/auth');
 
 // @route   PUT /api/users/points
