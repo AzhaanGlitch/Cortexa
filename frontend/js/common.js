@@ -9,6 +9,63 @@ const AppState = {
 
 const API_URL = 'http://localhost:5000/api';
 
+// Add this at the very top after other state variables
+async function initializeAppState() {
+    try {
+        // Check if authenticated
+        if (!auth.isAuthenticated()) {
+            console.log('User not authenticated');
+            return;
+        }
+
+        // Get current user data
+        const userData = await auth.apiRequest('/auth/me');
+        AppState.user = userData.user;
+
+        // Update display
+        updateNavPoints();
+
+        // Load courses
+        try {
+            const coursesData = await auth.apiRequest('/courses');
+            AppState.courses = coursesData.courses || [];
+        } catch (error) {
+            console.error('Failed to load courses:', error);
+        }
+
+    } catch (error) {
+        console.error('Error initializing app state:', error);
+        auth.logout();
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    // First check auth
+    if (auth.isAuthenticated()) {
+        await initializeAppState();
+    }
+    
+    // Set active nav link
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.getAttribute('href') === currentPage) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+    
+    // Add logout button click handler
+    const logoutBtns = document.querySelectorAll('[data-logout]');
+    logoutBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            auth.logout();
+        });
+    });
+});
+
 // Initialize app state from backend
 async function initializeAppState() {
     try {
