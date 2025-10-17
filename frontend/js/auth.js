@@ -3,20 +3,24 @@ const API_URL = 'http://localhost:5000/api';
 
 // Check authentication on page load
 document.addEventListener('DOMContentLoaded', () => {
-    // If on login/register page, check if already logged in
-    if (window.location.pathname.includes('login.html') || 
-        window.location.pathname.includes('register.html')) {
-        if (isAuthenticated()) {
-            window.location.href = 'index.html';
+    const currentPath = window.location.pathname;
+    const isAuthPage = currentPath.includes('login.html') || currentPath.includes('register.html');
+    const isProtectedPage = !isAuthPage && !currentPath.includes('index.html');
+    
+    if (isAuthenticated()) {
+        // User is logged in
+        if (isAuthPage) {
+            // Redirect from login/register to dashboard
+            window.location.href = '/index.html';
         }
         initializeAuthForms();
     } else {
-        // Protected pages - check authentication
-        if (!isAuthenticated() && 
-            !window.location.pathname.includes('login.html') && 
-            !window.location.pathname.includes('register.html')) {
-            window.location.href = 'login.html';
+        // User is NOT logged in
+        if (!isAuthPage) {
+            // Redirect to login
+            window.location.href = '/login.html';
         }
+        initializeAuthForms();
     }
 });
 
@@ -74,11 +78,11 @@ async function handleLogin(e) {
 
         // Redirect to dashboard
         setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1000);
+            window.location.href = '/index.html';
+        }, 1500);
 
     } catch (error) {
-        showError(error.message);
+        showError(error.message || 'Login failed. Please try again.');
         btnText.style.display = 'inline-block';
         btnLoader.style.display = 'none';
         loginBtn.disabled = false;
@@ -139,11 +143,11 @@ async function handleRegister(e) {
 
         // Redirect to dashboard
         setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 1000);
+            window.location.href = '/index.html';
+        }, 1500);
 
     } catch (error) {
-        showError(error.message);
+        showError(error.message || 'Registration failed. Please try again.');
         btnText.style.display = 'inline-block';
         btnLoader.style.display = 'none';
         registerBtn.disabled = false;
@@ -170,7 +174,7 @@ function getAuthToken() {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = 'login.html';
+    window.location.href = '/login.html';
 }
 
 // Show error message
@@ -181,6 +185,8 @@ function showError(message) {
     if (errorAlert && errorMessage) {
         errorMessage.textContent = message;
         errorAlert.style.display = 'block';
+        errorAlert.classList.remove('alert-success');
+        errorAlert.classList.add('alert-danger');
         
         // Auto hide after 5 seconds
         setTimeout(() => {
