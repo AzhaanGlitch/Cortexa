@@ -5,20 +5,32 @@ const Course = require('../models/Course');
 
 dotenv.config();
 
-// Connect to database
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
+// Connect to database with proper options
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
+        console.log('✅ MongoDB Connected');
+    } catch (error) {
+        console.error('❌ MongoDB Connection Failed:', error.message);
+        process.exit(1);
+    }
+};
 
 const seedDatabase = async () => {
     try {
+        await connectDB();
+
         // Clear existing data
+        console.log('🗑️ Clearing existing data...');
         await User.deleteMany({});
         await Course.deleteMany({});
         console.log('✅ Cleared existing data');
 
         // Seed courses
+        console.log('📚 Seeding courses...');
         const courses = await Course.insertMany([
             {
                 title: 'JavaScript Fundamentals',
@@ -28,7 +40,7 @@ const seedDatabase = async () => {
                 duration: '4 weeks',
                 points: 500,
                 icon: 'fa-js',
-                color: 'linear-gradient(135deg, #f7df1e, #f0db4f)',
+                color: 'linear-gradient(135deg, #3b82f6, #1e40af)',
                 lessons: [
                     {
                         lessonNumber: 1,
@@ -41,11 +53,6 @@ const seedDatabase = async () => {
                                 question: 'What is the correct syntax to declare a variable?',
                                 options: ['var x = 5;', 'variable x = 5;', 'v x = 5;', 'x := 5;'],
                                 correctAnswer: 0
-                            },
-                            {
-                                question: 'Which of these is NOT a JS data type?',
-                                options: ['String', 'Boolean', 'Float', 'Undefined'],
-                                correctAnswer: 2
                             }
                         ]
                     },
@@ -113,7 +120,7 @@ const seedDatabase = async () => {
                     'Manipulate the DOM',
                     'Handle asynchronous code'
                 ],
-                enrolledCount: 2547,
+                enrolledCount: 0,
                 isPublished: true
             },
             {
@@ -124,28 +131,87 @@ const seedDatabase = async () => {
                 duration: '6 weeks',
                 points: 750,
                 icon: 'fa-react',
-                color: 'linear-gradient(135deg, #61dafb, #21a1c4)',
-                lessons: Array(5).fill(null).map((_, i) => ({
-                    lessonNumber: i + 1,
-                    title: `React Lesson ${i + 1}`,
-                    duration: `${1 + i * 0.5} hours`,
-                    icon: 'fa-puzzle-piece',
-                    content: `Learn React concepts part ${i + 1}`,
-                    quiz: [
-                        {
-                            question: `Question for lesson ${i + 1}?`,
-                            options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
-                            correctAnswer: 0
-                        }
-                    ]
-                })),
-                objectives: [
-                    'Understand React components',
-                    'Master state and props',
-                    'Use hooks effectively',
-                    'Build real applications'
+                color: 'linear-gradient(135deg, #3b82f6, #0ea5e9)',
+                lessons: [
+                    {
+                        lessonNumber: 1,
+                        title: 'React Basics',
+                        duration: '1 hour',
+                        icon: 'fa-puzzle-piece',
+                        content: 'Learn React concepts part 1',
+                        quiz: [
+                            {
+                                question: 'What is React?',
+                                options: ['A database', 'A JavaScript library', 'A server', 'A CSS framework'],
+                                correctAnswer: 1
+                            }
+                        ]
+                    },
+                    {
+                        lessonNumber: 2,
+                        title: 'Components and Props',
+                        duration: '1.5 hours',
+                        icon: 'fa-puzzle-piece',
+                        content: 'Learn React concepts part 2',
+                        quiz: [
+                            {
+                                question: 'What are props?',
+                                options: ['Properties passed to components', 'Component state', 'Hooks', 'CSS styles'],
+                                correctAnswer: 0
+                            }
+                        ]
+                    },
+                    {
+                        lessonNumber: 3,
+                        title: 'State and Lifecycle',
+                        duration: '2 hours',
+                        icon: 'fa-sync',
+                        content: 'Learn React concepts part 3',
+                        quiz: [
+                            {
+                                question: 'What is state in React?',
+                                options: ['Data that props hold', 'Data that changes over time', 'JSX syntax', 'Virtual DOM'],
+                                correctAnswer: 1
+                            }
+                        ]
+                    },
+                    {
+                        lessonNumber: 4,
+                        title: 'Hooks in Depth',
+                        duration: '2 hours',
+                        icon: 'fa-link',
+                        content: 'Learn React concepts part 4',
+                        quiz: [
+                            {
+                                question: 'What is useState?',
+                                options: ['A component', 'A hook for state management', 'A lifecycle method', 'A prop'],
+                                correctAnswer: 1
+                            }
+                        ]
+                    },
+                    {
+                        lessonNumber: 5,
+                        title: 'Advanced Patterns',
+                        duration: '2 hours',
+                        icon: 'fa-star',
+                        content: 'Learn React concepts part 5',
+                        quiz: [
+                            {
+                                question: 'What is context API used for?',
+                                options: ['Styling', 'Global state management', 'Routing', 'API calls'],
+                                correctAnswer: 1
+                            }
+                        ]
+                    }
                 ],
-                enrolledCount: 1823,
+                objectives: [
+                    'Understand React components and props',
+                    'Master state management with hooks',
+                    'Build reusable UI components',
+                    'Create full-stack applications',
+                    'Advanced React patterns'
+                ],
+                enrolledCount: 0,
                 isPublished: true
             },
             {
@@ -156,124 +222,87 @@ const seedDatabase = async () => {
                 duration: '8 weeks',
                 points: 800,
                 icon: 'fa-python',
-                color: 'linear-gradient(135deg, #3776ab, #ffd343)',
-                lessons: Array(5).fill(null).map((_, i) => ({
-                    lessonNumber: i + 1,
-                    title: `Python Lesson ${i + 1}`,
-                    duration: `${2 + i * 0.5} hours`,
-                    icon: 'fa-code',
-                    content: `Learn Python concepts part ${i + 1}`,
-                    quiz: [
-                        {
-                            question: `Python question ${i + 1}?`,
-                            options: ['Option A', 'Option B', 'Option C', 'Option D'],
-                            correctAnswer: 1
-                        }
-                    ]
-                })),
+                color: 'linear-gradient(135deg, #3b82f6, #10b981)',
+                lessons: [
+                    {
+                        lessonNumber: 1,
+                        title: 'Python Basics',
+                        duration: '1 hour',
+                        icon: 'fa-play-circle',
+                        content: 'Learn Python basics part 1',
+                        quiz: [
+                            {
+                                question: 'What is Python?',
+                                options: ['A snake', 'A programming language', 'A framework', 'A library'],
+                                correctAnswer: 1
+                            }
+                        ]
+                    },
+                    {
+                        lessonNumber: 2,
+                        title: 'Data Structures',
+                        duration: '2 hours',
+                        icon: 'fa-database',
+                        content: 'Learn Python basics part 2',
+                        quiz: [
+                            {
+                                question: 'What is a list in Python?',
+                                options: ['Immutable collection', 'Mutable collection', 'A function', 'A class'],
+                                correctAnswer: 1
+                            }
+                        ]
+                    },
+                    {
+                        lessonNumber: 3,
+                        title: 'OOP Concepts',
+                        duration: '2.5 hours',
+                        icon: 'fa-object-group',
+                        content: 'Learn Python basics part 3',
+                        quiz: [
+                            {
+                                question: 'What is a class?',
+                                options: ['A function', 'A blueprint for objects', 'A variable', 'A module'],
+                                correctAnswer: 1
+                            }
+                        ]
+                    },
+                    {
+                        lessonNumber: 4,
+                        title: 'File Handling',
+                        duration: '1.5 hours',
+                        icon: 'fa-file',
+                        content: 'Learn Python basics part 4',
+                        quiz: [
+                            {
+                                question: 'How do you open a file in Python?',
+                                options: ['file.open()', 'open(file)', 'read(file)', 'access(file)'],
+                                correctAnswer: 1
+                            }
+                        ]
+                    },
+                    {
+                        lessonNumber: 5,
+                        title: 'Advanced Topics',
+                        duration: '3 hours',
+                        icon: 'fa-rocket',
+                        content: 'Learn Python basics part 5',
+                        quiz: [
+                            {
+                                question: 'What is a decorator?',
+                                options: ['A class', 'A function that modifies another function', 'A variable', 'An import'],
+                                correctAnswer: 1
+                            }
+                        ]
+                    }
+                ],
                 objectives: [
                     'Python syntax and basics',
                     'Data structures',
                     'Object-oriented programming',
-                    'File handling and databases'
+                    'File handling and databases',
+                    'Advanced Python topics'
                 ],
-                enrolledCount: 3421,
-                isPublished: true
-            },
-            {
-                title: 'UI/UX Design Principles',
-                description: 'Create beautiful and functional user interfaces',
-                category: 'design',
-                level: 'Beginner',
-                duration: '5 weeks',
-                points: 600,
-                icon: 'fa-pencil-ruler',
-                color: 'linear-gradient(135deg, #ff6b6b, #ee5a6f)',
-                lessons: Array(5).fill(null).map((_, i) => ({
-                    lessonNumber: i + 1,
-                    title: `Design Lesson ${i + 1}`,
-                    duration: `${1.5 + i * 0.5} hours`,
-                    icon: 'fa-palette',
-                    content: `Learn design concepts part ${i + 1}`,
-                    quiz: [
-                        {
-                            question: `Design question ${i + 1}?`,
-                            options: ['Answer 1', 'Answer 2', 'Answer 3', 'Answer 4'],
-                            correctAnswer: 2
-                        }
-                    ]
-                })),
-                objectives: [
-                    'Design principles',
-                    'Color theory and typography',
-                    'User research',
-                    'Prototyping and testing'
-                ],
-                enrolledCount: 1654,
-                isPublished: true
-            },
-            {
-                title: 'Data Science with Python',
-                description: 'Analyze data and build machine learning models',
-                category: 'data',
-                level: 'Advanced',
-                duration: '10 weeks',
-                points: 1000,
-                icon: 'fa-chart-bar',
-                color: 'linear-gradient(135deg, #667eea, #764ba2)',
-                lessons: Array(5).fill(null).map((_, i) => ({
-                    lessonNumber: i + 1,
-                    title: `Data Science Lesson ${i + 1}`,
-                    duration: `${2 + i * 0.5} hours`,
-                    icon: 'fa-brain',
-                    content: `Learn data science concepts part ${i + 1}`,
-                    quiz: [
-                        {
-                            question: `Data science question ${i + 1}?`,
-                            options: ['Pandas', 'NumPy', 'Scikit-learn', 'All of the above'],
-                            correctAnswer: 3
-                        }
-                    ]
-                })),
-                objectives: [
-                    'Data analysis with pandas',
-                    'Data visualization',
-                    'Machine learning basics',
-                    'Deep learning introduction'
-                ],
-                enrolledCount: 2134,
-                isPublished: true
-            },
-            {
-                title: 'Digital Marketing Strategy',
-                description: 'Master online marketing and grow your business',
-                category: 'marketing',
-                level: 'Intermediate',
-                duration: '6 weeks',
-                points: 650,
-                icon: 'fa-bullhorn',
-                color: 'linear-gradient(135deg, #f093fb, #f5576c)',
-                lessons: Array(5).fill(null).map((_, i) => ({
-                    lessonNumber: i + 1,
-                    title: `Marketing Lesson ${i + 1}`,
-                    duration: `${1.5 + i * 0.5} hours`,
-                    icon: 'fa-chart-line',
-                    content: `Learn marketing strategies part ${i + 1}`,
-                    quiz: [
-                        {
-                            question: `Marketing question ${i + 1}?`,
-                            options: ['SEO', 'SEM', 'Social Media', 'Email Marketing'],
-                            correctAnswer: i % 4
-                        }
-                    ]
-                })),
-                objectives: [
-                    'Marketing fundamentals',
-                    'Social media strategy',
-                    'SEO and content marketing',
-                    'Analytics and optimization'
-                ],
-                enrolledCount: 1987,
+                enrolledCount: 0,
                 isPublished: true
             }
         ]);
@@ -281,77 +310,71 @@ const seedDatabase = async () => {
         console.log(`✅ Seeded ${courses.length} courses`);
 
         // Seed sample users
+        console.log('👥 Seeding users...');
         const users = await User.insertMany([
             {
                 username: 'alex_thunder',
                 email: 'alex@example.com',
                 password: 'password123',
-                points: 5240,
-                level: 6,
-                streak: 12,
+                points: 0,
+                level: 1,
+                streak: 0,
                 avatar: 'AT'
             },
             {
                 username: 'sarah_chen',
                 email: 'sarah@example.com',
                 password: 'password123',
-                points: 4890,
-                level: 5,
-                streak: 8,
+                points: 0,
+                level: 1,
+                streak: 0,
                 avatar: 'SC'
             },
             {
                 username: 'marcus_steel',
                 email: 'marcus@example.com',
                 password: 'password123',
-                points: 4560,
-                level: 5,
-                streak: 6,
+                points: 0,
+                level: 1,
+                streak: 0,
                 avatar: 'MS'
             },
             {
                 username: 'emma_watson',
                 email: 'emma@example.com',
                 password: 'password123',
-                points: 3980,
-                level: 4,
-                streak: 5,
+                points: 0,
+                level: 1,
+                streak: 0,
                 avatar: 'EW'
             },
             {
                 username: 'david_kim',
                 email: 'david@example.com',
                 password: 'password123',
-                points: 3750,
-                level: 4,
-                streak: 4,
+                points: 0,
+                level: 1,
+                streak: 0,
                 avatar: 'DK'
             }
         ]);
 
         console.log(`✅ Seeded ${users.length} users`);
 
-        // Enroll some users in courses
+        // Enroll first user in a course
+        console.log('📝 Setting up enrollments...');
         const firstUser = users[0];
-        firstUser.enrolledCourses.push(
-            {
-                courseId: courses[0]._id,
-                progress: 80,
-                completedLessons: [1, 2, 3, 4],
-                completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-            },
-            {
-                courseId: courses[1]._id,
-                progress: 45,
-                completedLessons: [1, 2]
-            }
-        );
+        firstUser.enrolledCourses.push({
+            courseId: courses[0]._id,
+            progress: 0,
+            completedLessons: []
+        });
         await firstUser.save();
 
-        console.log('✅ Database seeding complete!');
+        console.log('✅ Seeding complete!');
         process.exit(0);
     } catch (error) {
-        console.error('❌ Seeding error:', error);
+        console.error('❌ Seeding error:', error.message);
         process.exit(1);
     }
 };
