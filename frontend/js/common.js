@@ -24,12 +24,19 @@ async function initializeAppState() {
         try {
             const userData = await auth.apiRequest('/auth/me');
             AppState.user = userData.user;
-            console.log('User data loaded:', AppState.user);
+            console.log('User data loaded from backend:', AppState.user);
             updateNavPoints();
         } catch (error) {
             console.error('Failed to load user data:', error);
-            auth.logout();
-            return;
+            // Fallback to localStorage but mark as incomplete
+            const storedUser = auth.getCurrentUser();
+            if (storedUser) {
+                AppState.user = storedUser;
+                console.log('Using stored user data as fallback:', AppState.user);
+            } else {
+                auth.logout();
+                return;
+            }
         }
 
         // Load courses
@@ -39,6 +46,7 @@ async function initializeAppState() {
             console.log('Courses loaded:', AppState.courses.length);
         } catch (error) {
             console.error('Failed to load courses:', error);
+            AppState.courses = [];
         }
 
         // Load leaderboard
@@ -48,6 +56,7 @@ async function initializeAppState() {
             console.log('Leaderboard loaded:', AppState.leaderboard.length);
         } catch (error) {
             console.error('Failed to load leaderboard:', error);
+            AppState.leaderboard = [];
         }
 
         // Initialize achievements
@@ -57,7 +66,7 @@ async function initializeAppState() {
                 name: 'Starter',
                 description: 'Complete your first lesson',
                 icon: 'fa-rocket',
-                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'starter') : false,
+                unlocked: AppState.user && AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'starter') : false,
                 points: 50
             },
             {
@@ -65,7 +74,7 @@ async function initializeAppState() {
                 name: 'Fast Learner',
                 description: 'Complete 5 lessons in one day',
                 icon: 'fa-bolt',
-                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'fast-learner') : false,
+                unlocked: AppState.user && AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'fast-learner') : false,
                 points: 100
             },
             {
@@ -73,7 +82,7 @@ async function initializeAppState() {
                 name: 'Dedicated',
                 description: 'Maintain a 7-day streak',
                 icon: 'fa-fire',
-                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'dedicated') : false,
+                unlocked: AppState.user && AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'dedicated') : false,
                 points: 150
             },
             {
@@ -81,7 +90,7 @@ async function initializeAppState() {
                 name: 'Master',
                 description: 'Complete 5 courses',
                 icon: 'fa-crown',
-                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'master') : false,
+                unlocked: AppState.user && AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'master') : false,
                 points: 300
             },
             {
@@ -89,7 +98,7 @@ async function initializeAppState() {
                 name: 'Perfectionist',
                 description: 'Score 100% on 10 quizzes',
                 icon: 'fa-star',
-                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'perfectionist') : false,
+                unlocked: AppState.user && AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'perfectionist') : false,
                 points: 200
             },
             {
@@ -97,8 +106,45 @@ async function initializeAppState() {
                 name: 'Champion',
                 description: 'Reach the top of leaderboard',
                 icon: 'fa-trophy',
-                unlocked: AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'champion') : false,
+                unlocked: AppState.user && AppState.user.achievements ? AppState.user.achievements.some(a => a.achievementId === 'champion') : false,
                 points: 500
+            }
+        ];
+
+        // Initialize challenges
+        AppState.challenges = [
+            {
+                id: 1,
+                title: 'JavaScript Master',
+                description: 'Complete 5 JavaScript questions',
+                difficulty: 'easy',
+                progress: 0,
+                total: 5,
+                points: 100,
+                icon: 'fa-code',
+                timeLeft: '12 hours'
+            },
+            {
+                id: 2,
+                title: 'Speed Demon',
+                description: 'Complete 3 lessons in under 2 hours',
+                difficulty: 'medium',
+                progress: 0,
+                total: 3,
+                points: 200,
+                icon: 'fa-clock',
+                timeLeft: '8 hours'
+            },
+            {
+                id: 3,
+                title: 'Perfect Score',
+                description: 'Get 100% on any quiz',
+                difficulty: 'hard',
+                progress: 0,
+                total: 1,
+                points: 300,
+                icon: 'fa-star',
+                timeLeft: '24 hours'
             }
         ];
 
@@ -143,6 +189,7 @@ function calculateLevel(points) {
 
 // Check if user leveled up
 function checkLevelUp() {
+    if (!AppState.user) return;
     const newLevel = calculateLevel(AppState.user.points);
     if (newLevel > AppState.user.level) {
         AppState.user.level = newLevel;
@@ -262,7 +309,6 @@ async function startCourse(courseId) {
             body: JSON.stringify({ courseId })
         });
         showToast('Enrolled successfully!', 'success');
-        // In a real app, navigate to course page
         window.location.href = `/learn.html?course=${courseId}`;
     } catch (error) {
         if (error.message && error.message.includes('already enrolled')) {
@@ -292,7 +338,6 @@ async function completeLesson(courseId, lessonId, score, correctAnswers, totalQu
         updateNavPoints();
         showToast('Lesson completed! Points earned!', 'success');
 
-        // Check for badges
         if (score === 100) {
             checkBadgeUnlock('perfectionist');
         }
