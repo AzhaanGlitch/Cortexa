@@ -1,10 +1,17 @@
 // Profile page functionality
 
 document.addEventListener('DOMContentLoaded', () => {
-    initializeProfile();
+    setTimeout(() => {
+        initializeProfile();
+    }, 300);
 });
 
 function initializeProfile() {
+    if (!AppState.user) {
+        console.warn('User data not available');
+        return;
+    }
+
     updateProfileHeader();
     renderAchievements();
     renderProfileCourses();
@@ -13,11 +20,14 @@ function initializeProfile() {
 }
 
 function updateProfileHeader() {
-    document.getElementById('profileName').textContent = AppState.user.name;
-    document.getElementById('profileLevel').textContent = AppState.user.level;
-    document.getElementById('profilePoints').textContent = formatNumber(AppState.user.points);
-    document.getElementById('profileStreak').textContent = AppState.user.streak;
-    document.getElementById('profileCourses').textContent = AppState.user.coursesCompleted;
+    document.getElementById('profileName').textContent = AppState.user.username || 'Learner';
+    document.getElementById('profileLevel').textContent = AppState.user.level || 1;
+    document.getElementById('profilePoints').textContent = formatNumber(AppState.user.points || 0);
+    document.getElementById('profileStreak').textContent = AppState.user.streak || 0;
+    
+    const completed = AppState.user.enrolledCourses ? 
+        AppState.user.enrolledCourses.filter(c => c.completedAt).length : 0;
+    document.getElementById('profileCourses').textContent = completed;
     
     // Update title based on level
     const titles = {
@@ -29,8 +39,9 @@ function updateProfileHeader() {
         6: 'Grandmaster',
         7: 'Legend'
     };
-    const title = titles[Math.min(AppState.user.level, 7)] || 'Scholar';
-    document.getElementById('profileTitle').textContent = `Level ${AppState.user.level} ${title}`;
+    const level = AppState.user.level || 1;
+    const title = titles[Math.min(level, 7)] || 'Scholar';
+    document.getElementById('profileTitle').textContent = `Level ${level} ${title}`;
 }
 
 function renderAchievements() {
@@ -38,7 +49,10 @@ function renderAchievements() {
     if (!container) return;
     
     const unlockedCount = AppState.achievements.filter(a => a.unlocked).length;
-    document.getElementById('achievementCount').textContent = `${unlockedCount}/${AppState.achievements.length}`;
+    const countEl = document.getElementById('achievementCount');
+    if (countEl) {
+        countEl.textContent = `${unlockedCount}/${AppState.achievements.length}`;
+    }
     
     container.innerHTML = AppState.achievements.map(achievement => `
         <div class="achievement-card ${achievement.unlocked ? '' : 'locked'}">
@@ -49,7 +63,7 @@ function renderAchievements() {
             <div class="achievement-desc">${achievement.description}</div>
             ${achievement.unlocked ? 
                 '<div class="mt-2"><span class="badge bg-success"><i class="fas fa-check me-1"></i>Unlocked</span></div>' :
-                `<div class="mt-2"><span class="badge bg-secondary">${achievement.points} pts</span></div>`
+                `<div class="mt-2"><span class="badge" style="background: var(--bg-tertiary);">${achievement.points} pts</span></div>`
             }
         </div>
     `).join('');
@@ -59,14 +73,29 @@ function renderProfileCourses() {
     const container = document.getElementById('profileCoursesList');
     if (!container) return;
     
-    const enrolledCourses = AppState.courses.filter(c => c.status !== 'new');
+    if (!AppState.user.enrolledCourses || AppState.user.enrolledCourses.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-book-open fa-3x mb-3" style="color: var(--text-muted);"></i>
+                <p style="color: var(--text-secondary);">No courses enrolled yet</p>
+                <a href="courses.html" class="btn btn-primary">Browse Courses</a>
+            </div>
+        `;
+        return;
+    }
+    
+    const enrolledCourses = AppState.user.enrolledCourses
+        .map(ec => ({
+            ...ec,
+            courseData: AppState.courses.find(c => c._id === ec.courseId || c.id === ec.courseId)
+        }))
+        .filter(ec => ec.courseData);
     
     if (enrolledCourses.length === 0) {
         container.innerHTML = `
             <div class="text-center py-4">
-                <i class="fas fa-book-open fa-3x mb-3 text-muted"></i>
-                <p class="text-muted">No courses enrolled yet</p>
-                <a href="courses.html" class="btn btn-primary">Browse Courses</a>
+                <i class="fas fa-book-open fa-3x mb-3" style="color: var(--text-muted);"></i>
+                <p style="color: var(--text-secondary);">No courses found</p>
             </div>
         `;
         return;
@@ -75,21 +104,21 @@ function renderProfileCourses() {
     container.innerHTML = enrolledCourses.map(course => `
         <div class="course-progress-item mb-3">
             <div class="d-flex align-items-center mb-2">
-                <div class="course-icon-small me-3" style="background: ${course.color}">
-                    <i class="fas ${course.icon}"></i>
+                <div class="course-icon-small me-3" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));">
+                    <i class="fas fa-book"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <h6 class="mb-1">${course.title}</h6>
-                    <div class="small text-muted">${course.lessons} lessons • ${course.level}</div>
+                    <h6 class="mb-1">${course.courseData.title}</h6>
+                    <div class="small" style="color: var(--text-muted);">${course.courseData.lessons ? course.courseData.lessons.length : 0} lessons • ${course.courseData.level}</div>
                 </div>
                 <div>
-                    ${course.status === 'completed' ? 
+                    ${course.completedAt ? 
                         '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Completed</span>' :
-                        `<span class="badge bg-warning">${Math.round(course.progress)}%</span>`
+                        `<span class="badge" style="background: var(--accent-warning); color: #000;">${Math.round(course.progress)}%</span>`
                     }
                 </div>
             </div>
-            ${course.status !== 'completed' ? `
+            ${!course.completedAt ? `
                 <div class="progress-bar-slim">
                     <div class="progress-bar-fill" style="width: ${course.progress}%"></div>
                 </div>
@@ -99,16 +128,22 @@ function renderProfileCourses() {
 }
 
 function updateSidebarLevel() {
-    const level = AppState.user.level;
-    const points = AppState.user.points;
+    if (!AppState.user) return;
+
+    const level = AppState.user.level || 1;
+    const points = AppState.user.points || 0;
     const currentLevelBase = (level - 1) * 1000;
-    const progressInLevel = points - currentLevelBase;
-    const progressPercentage = (progressInLevel / 1000) * 100;
-    const remaining = (level * 1000) - points;
+    const progressInLevel = Math.max(0, points - currentLevelBase);
+    const progressPercentage = Math.min(100, (progressInLevel / 1000) * 100);
+    const remaining = Math.max(0, (level * 1000) - points);
     
-    document.getElementById('sidebarLevel').textContent = level;
-    document.getElementById('sidebarLevelProgress').style.width = `${progressPercentage}%`;
-    document.getElementById('sidebarPointsToNext').textContent = remaining;
+    const levelEl = document.getElementById('sidebarLevel');
+    const progressEl = document.getElementById('sidebarLevelProgress');
+    const pointsEl = document.getElementById('sidebarPointsToNext');
+
+    if (levelEl) levelEl.textContent = level;
+    if (progressEl) progressEl.style.width = `${progressPercentage}%`;
+    if (pointsEl) pointsEl.textContent = remaining;
 }
 
 function renderRecentActivity() {
@@ -118,30 +153,28 @@ function renderRecentActivity() {
     // Simulated recent activity
     const activities = [
         {
-            text: 'Completed JavaScript Fundamentals',
-            time: '2 hours ago',
-            icon: 'fa-check-circle',
-            color: 'var(--accent-green)'
+            text: 'Joined CORTEXA',
+            time: 'Today',
+            icon: 'fa-rocket',
+            color: 'var(--accent-primary)'
         },
         {
-            text: 'Earned "Fast Learner" badge',
-            time: '5 hours ago',
-            icon: 'fa-trophy',
-            color: 'var(--accent-orange)'
-        },
-        {
-            text: 'Started Data Science course',
-            time: '1 day ago',
-            icon: 'fa-play-circle',
-            color: 'var(--accent-blue)'
-        },
-        {
-            text: 'Reached Level 3',
-            time: '2 days ago',
-            icon: 'fa-level-up-alt',
-            color: 'var(--accent-purple)'
+            text: 'Profile created',
+            time: 'Today',
+            icon: 'fa-user-check',
+            color: 'var(--accent-success)'
         }
     ];
+
+    // Add course activities if user has enrolled courses
+    if (AppState.user.enrolledCourses && AppState.user.enrolledCourses.length > 0) {
+        activities.unshift({
+            text: `Enrolled in ${AppState.user.enrolledCourses.length} course(s)`,
+            time: 'Recently',
+            icon: 'fa-play-circle',
+            color: 'var(--accent-primary)'
+        });
+    }
     
     container.innerHTML = activities.map(activity => `
         <div class="activity-item">
@@ -151,7 +184,7 @@ function renderRecentActivity() {
                     <div class="small">${activity.text}</div>
                 </div>
             </div>
-            <div class="activity-time">${activity.time}</div>
+            <div class="activity-time" style="color: var(--text-muted);">${activity.time}</div>
         </div>
     `).join('');
 }
@@ -162,24 +195,37 @@ style.textContent = `
     .course-progress-item {
         background: var(--bg-tertiary);
         padding: 1.25rem;
-        border-radius: 12px;
+        border-radius: 10px;
         border: 1px solid var(--border-color);
         transition: all 0.3s ease;
     }
     
     .course-progress-item:hover {
-        border-color: var(--accent-blue);
-        transform: translateX(5px);
+        border-color: var(--accent-primary);
+        transform: translateX(4px);
     }
     
     .course-icon-small {
         width: 50px;
         height: 50px;
-        border-radius: 12px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
+    }
+
+    .activity-item {
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-time {
+        font-size: 0.8rem;
     }
 `;
 document.head.appendChild(style);
