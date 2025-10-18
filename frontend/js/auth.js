@@ -1,37 +1,35 @@
 // API Configuration
 const API_URL = 'http://localhost:5000/api';
 
-// Initialize auth state checks
-function initializeAuthState() {
+// Initialize auth state checks - RUN IMMEDIATELY
+(function initializeAuthState() {
     const currentPath = window.location.pathname;
-    const isAuthPage = currentPath.includes('login') || currentPath.includes('register') || currentPath === '/' || currentPath === '';
+    const currentHref = window.location.href;
+    const isAuthPage = currentPath.includes('login') || currentPath.includes('register') || currentPath === '/' || currentPath === '/index.html' || currentHref.includes('login') || currentHref.includes('register');
     const isAuthenticated = localStorage.getItem('token') !== null;
 
+    console.log('=== AUTH CHECK ===');
     console.log('Current Path:', currentPath);
+    console.log('Current Href:', currentHref);
     console.log('Is Auth Page:', isAuthPage);
     console.log('Is Authenticated:', isAuthenticated);
 
-    // If user is NOT authenticated and NOT on auth page, redirect to login
+    // PRIORITY 1: If NOT authenticated and NOT on auth page -> GO TO LOGIN
     if (!isAuthenticated && !isAuthPage) {
-        console.log('User not authenticated, redirecting to login');
-        window.location.href = '/login.html';
+        console.log('❌ NOT AUTH + NOT ON AUTH PAGE -> REDIRECT TO LOGIN');
+        window.location.replace('/login.html');
         return;
     }
 
-    // If user IS authenticated and IS on auth page, redirect to dashboard
-    if (isAuthenticated && isAuthPage) {
-        console.log('User authenticated on auth page, redirecting to dashboard');
-        window.location.href = '/index.html';
+    // PRIORITY 2: If authenticated and IS on auth page -> GO TO DASHBOARD
+    if (isAuthenticated && (currentPath.includes('login') || currentPath.includes('register'))) {
+        console.log('✅ AUTH + ON AUTH PAGE -> REDIRECT TO DASHBOARD');
+        window.location.replace('/index.html');
         return;
     }
-}
 
-// Check authentication on page load (run immediately)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeAuthState);
-} else {
-    initializeAuthState();
-}
+    console.log('✅ Auth check passed');
+})();
 
 // Initialize auth forms when they exist
 document.addEventListener('DOMContentLoaded', () => {
@@ -88,14 +86,14 @@ async function handleLogin(e) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        console.log('Login successful, user data stored');
+        console.log('✅ Login successful');
 
         // Show success message
         showSuccess('Login successful! Redirecting...');
 
         // Redirect to dashboard
         setTimeout(() => {
-            window.location.href = '/index.html';
+            window.location.replace('/index.html');
         }, 1500);
 
     } catch (error) {
@@ -165,14 +163,14 @@ async function handleRegister(e) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        console.log('Registration successful, user data stored');
+        console.log('✅ Registration successful');
 
         // Show success message
-        showSuccess('Account created successfully! Redirecting...');
+        showSuccess('Account created! Redirecting...');
 
         // Redirect to dashboard
         setTimeout(() => {
-            window.location.href = '/index.html';
+            window.location.replace('/index.html');
         }, 1500);
 
     } catch (error) {
@@ -202,10 +200,10 @@ function getAuthToken() {
 
 // Logout user
 function logout() {
-    console.log('Logging out user');
+    console.log('🚪 Logging out user');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login.html';
+    window.location.replace('/login.html');
 }
 
 // Show error message
@@ -219,7 +217,7 @@ function showError(message) {
         errorAlert.classList.remove('alert-success');
         errorAlert.classList.add('alert-danger');
         
-        console.log('Error shown:', message);
+        console.log('⚠️ Error shown:', message);
         
         // Auto hide after 5 seconds
         setTimeout(() => {
