@@ -5,12 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeDashboard() {
-    updateWelcomeBanner();
-    loadContinueCourses();
-    loadRecentAchievements();
-    loadMiniLeaderboard();
-    initializeActivityChart();
-    updateLevelProgress();
+    // Wait for AppState to be populated
+    setTimeout(() => {
+        updateWelcomeBanner();
+        loadContinueCourses();
+        loadRecentAchievements();
+        loadMiniLeaderboard();
+        initializeActivityChart();
+        updateLevelProgress();
+    }, 500);
 }
 
 // Update welcome banner with user stats
@@ -20,10 +23,19 @@ function updateWelcomeBanner() {
     const coursesCompleted = document.getElementById('coursesCompleted');
     const currentStreak = document.getElementById('currentStreak');
     
-    if (userName) userName.textContent = AppState.user.name;
-    if (totalPoints) totalPoints.textContent = formatNumber(AppState.user.points);
-    if (coursesCompleted) coursesCompleted.textContent = AppState.user.coursesCompleted;
-    if (currentStreak) currentStreak.textContent = AppState.user.streak;
+    if (!AppState.user) {
+        console.warn('User data not available yet');
+        return;
+    }
+
+    if (userName) userName.textContent = AppState.user.username || 'Learner';
+    if (totalPoints) totalPoints.textContent = AppState.user.points || 0;
+    if (coursesCompleted) {
+        const completed = AppState.user.enrolledCourses ? 
+            AppState.user.enrolledCourses.filter(c => c.completedAt).length : 0;
+        coursesCompleted.textContent = completed;
+    }
+    if (currentStreak) currentStreak.textContent = AppState.user.streak || 0;
 }
 
 // Load courses in progress
@@ -31,15 +43,34 @@ function loadContinueCourses() {
     const container = document.getElementById('continueCoursesContainer');
     if (!container) return;
     
-    const inProgressCourses = AppState.courses.filter(c => c.status === 'in-progress').slice(0, 2);
+    if (!AppState.courses || AppState.courses.length === 0) {
+        container.innerHTML = `
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-book-open fa-3x mb-3" style="color: var(--text-muted);"></i>
+                    <h5>No courses available</h5>
+                    <p style="color: var(--text-secondary);">Loading courses...</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    // Filter user's enrolled courses
+    const userEnrolledIds = AppState.user && AppState.user.enrolledCourses ? 
+        AppState.user.enrolledCourses.map(e => e.courseId) : [];
+
+    const inProgressCourses = AppState.courses
+        .filter(c => userEnrolledIds.includes(c._id || c.id))
+        .slice(0, 2);
     
     if (inProgressCourses.length === 0) {
         container.innerHTML = `
             <div class="col-12">
                 <div class="text-center py-5">
-                    <i class="fas fa-book-open fa-3x mb-3 text-muted"></i>
+                    <i class="fas fa-book-open fa-3x mb-3" style="color: var(--text-muted);"></i>
                     <h5>No courses in progress</h5>
-                    <p class="text-muted">Start a new course to begin learning!</p>
+                    <p style="color: var(--text-secondary);">Start a new course to begin learning!</p>
                     <a href="courses.html" class="btn btn-primary mt-3">
                         <i class="fas fa-plus me-2"></i>Browse Courses
                     </a>
@@ -49,32 +80,39 @@ function loadContinueCourses() {
         return;
     }
     
-    container.innerHTML = inProgressCourses.map(course => `
-        <div class="col-md-6 mb-3">
-            <div class="course-card" onclick="startCourse(${course.id})">
-                <div class="course-card-image" style="background: ${course.color}; height: 150px;">
-                    <i class="fas ${course.icon}"></i>
-                </div>
-                <div class="course-card-body">
-                    <span class="course-category">${course.category}</span>
-                    <h5>${course.title}</h5>
-                    <p>${course.description}</p>
-                    <div class="course-progress">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="small text-muted">Progress</span>
-                            <span class="small fw-bold">${Math.round(course.progress)}%</span>
-                        </div>
-                        <div class="progress-bar-slim">
-                            <div class="progress-bar-fill" style="width: ${course.progress}%"></div>
-                        </div>
+    container.innerHTML = inProgressCourses.map(course => {
+        const enrolledCourse = AppState.user.enrolledCourses.find(
+            e => (e.courseId === course._id || e.courseId === course.id)
+        );
+        const progress = enrolledCourse ? enrolledCourse.progress : 0;
+
+        return `
+            <div class="col-md-6 mb-3">
+                <div class="course-card" onclick="startCourse('${course._id || course.id}')">
+                    <div class="course-card-image" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));">
+                        <i class="fas fa-book"></i>
                     </div>
-                    <button class="btn btn-primary w-100 mt-3">
-                        <i class="fas fa-play me-2"></i>Continue Learning
-                    </button>
+                    <div class="course-card-body">
+                        <span class="course-category">${course.category || 'course'}</span>
+                        <h5>${course.title}</h5>
+                        <p>${course.description}</p>
+                        <div class="course-progress">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="small" style="color: var(--text-secondary);">Progress</span>
+                                <span class="small fw-bold">${Math.round(progress)}%</span>
+                            </div>
+                            <div class="progress-bar-slim">
+                                <div class="progress-bar-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary w-100 mt-3">
+                            <i class="fas fa-play me-2"></i>Continue Learning
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Load recent achievements
@@ -93,7 +131,7 @@ function loadRecentAchievements() {
             <div class="achievement-desc">${achievement.description}</div>
             ${achievement.unlocked ? 
                 `<div class="mt-2"><span class="badge bg-success">Unlocked</span></div>` :
-                `<div class="mt-2"><span class="badge bg-secondary">${achievement.points} pts</span></div>`
+                `<div class="mt-2"><span class="badge" style="background: var(--bg-tertiary);">${achievement.points} pts</span></div>`
             }
         </div>
     `).join('');
@@ -104,6 +142,11 @@ function loadMiniLeaderboard() {
     const container = document.getElementById('miniLeaderboard');
     if (!container) return;
     
+    if (!AppState.leaderboard || AppState.leaderboard.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Loading leaderboard...</p>';
+        return;
+    }
+
     updateLeaderboardRankings();
     const topUsers = AppState.leaderboard.slice(0, 5);
     
@@ -113,12 +156,12 @@ function loadMiniLeaderboard() {
                 ${user.rank <= 3 ? '<i class="fas fa-trophy"></i>' : user.rank}
             </div>
             <div class="leaderboard-avatar">
-                ${user.avatar}
+                ${user.avatar || user.username ? user.username.substring(0, 2).toUpperCase() : 'U'}
             </div>
             <div class="leaderboard-info">
-                <div class="leaderboard-name">${user.name}</div>
+                <div class="leaderboard-name">${user.username || user.name}</div>
                 <div class="leaderboard-stats">
-                    <span><i class="fas fa-star text-warning"></i> ${formatNumber(user.points)}</span>
+                    <span><i class="fas fa-star" style="color: var(--accent-warning);"></i> ${formatNumber(user.points)}</span>
                 </div>
             </div>
         </div>
@@ -130,86 +173,76 @@ function initializeActivityChart() {
     const canvas = document.getElementById('activityChart');
     if (!canvas) return;
     
-    const ctx = canvas.getContext('2d');
-    const activityData = getActivityData();
-    
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: activityData.labels,
-            datasets: [{
-                label: 'Minutes Learned',
-                data: activityData.data,
-                borderColor: '#0066ff',
-                backgroundColor: 'rgba(0, 102, 255, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 6,
-                pointBackgroundColor: '#0066ff',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointHoverRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: '#1e2339',
-                    titleColor: '#fff',
-                    bodyColor: '#a0aec0',
-                    borderColor: '#2d3748',
-                    borderWidth: 1,
-                    padding: 12,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.parsed.y} minutes`;
-                        }
-                    }
-                }
+    try {
+        const ctx = canvas.getContext('2d');
+        const activityData = getActivityData();
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: activityData.labels,
+                datasets: [{
+                    label: 'Minutes Learned',
+                    data: activityData.data,
+                    borderColor: 'var(--accent-primary)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: 'var(--accent-primary)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: '#2d3748',
-                        drawBorder: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
                     },
-                    ticks: {
-                        color: '#a0aec0',
-                        font: {
-                            size: 12
+                    tooltip: {
+                        backgroundColor: 'var(--bg-tertiary)',
+                        titleColor: 'var(--text-primary)',
+                        bodyColor: 'var(--text-secondary)',
+                        borderColor: 'var(--border-color)',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'var(--border-color)',
+                            drawBorder: false
                         },
-                        callback: function(value) {
-                            return value + 'm';
+                        ticks: {
+                            color: 'var(--text-muted)',
+                            font: { size: 12 },
+                            callback: function(value) {
+                                return value + 'm';
+                            }
                         }
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false,
-                        drawBorder: false
                     },
-                    ticks: {
-                        color: '#a0aec0',
-                        font: {
-                            size: 12
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: 'var(--text-muted)',
+                            font: { size: 12 }
                         }
                     }
                 }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Chart initialization error:', error);
+    }
 }
 
 // Update level progress
@@ -220,15 +253,15 @@ function updateLevelProgress() {
     const nextLevelPoints = document.getElementById('nextLevelPoints');
     const pointsToNextLevel = document.getElementById('pointsToNextLevel');
     
-    if (!userLevel) return;
+    if (!userLevel || !AppState.user) return;
     
-    const level = AppState.user.level;
-    const points = AppState.user.points;
+    const level = AppState.user.level || 1;
+    const points = AppState.user.points || 0;
     const currentLevelBase = (level - 1) * 1000;
     const nextLevelBase = level * 1000;
-    const progressInLevel = points - currentLevelBase;
-    const progressPercentage = (progressInLevel / 1000) * 100;
-    const remaining = nextLevelBase - points;
+    const progressInLevel = Math.max(0, points - currentLevelBase);
+    const progressPercentage = Math.min(100, (progressInLevel / 1000) * 100);
+    const remaining = Math.max(0, nextLevelBase - points);
     
     userLevel.textContent = level;
     levelProgressBar.style.width = `${progressPercentage}%`;
