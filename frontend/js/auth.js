@@ -4,24 +4,24 @@ const API_URL = 'http://localhost:5000/api';
 // Initialize auth state checks
 function initializeAuthState() {
     const currentPath = window.location.pathname;
-    const isAuthPage = currentPath.includes('login') || currentPath.includes('register');
+    const isAuthPage = currentPath.includes('login') || currentPath.includes('register') || currentPath === '/' || currentPath === '';
     const isAuthenticated = localStorage.getItem('token') !== null;
 
     console.log('Current Path:', currentPath);
     console.log('Is Auth Page:', isAuthPage);
     console.log('Is Authenticated:', isAuthenticated);
 
-    // If user is authenticated and on auth page, redirect to dashboard
-    if (isAuthenticated && isAuthPage) {
-        console.log('User authenticated on auth page, redirecting to dashboard');
-        window.location.href = '/index.html';
+    // If user is NOT authenticated and NOT on auth page, redirect to login
+    if (!isAuthenticated && !isAuthPage) {
+        console.log('User not authenticated, redirecting to login');
+        window.location.href = '/login.html';
         return;
     }
 
-    // If user is NOT authenticated and NOT on auth page, redirect to login
-    if (!isAuthenticated && !isAuthPage && currentPath !== '/') {
-        console.log('User not authenticated, redirecting to login');
-        window.location.href = '/login.html';
+    // If user IS authenticated and IS on auth page, redirect to dashboard
+    if (isAuthenticated && isAuthPage) {
+        console.log('User authenticated on auth page, redirecting to dashboard');
+        window.location.href = '/index.html';
         return;
     }
 }
@@ -135,7 +135,7 @@ async function handleRegister(e) {
         return;
     }
 
-    if (!document.getElementById('agreeTerms').checked) {
+    if (document.getElementById('agreeTerms') && !document.getElementById('agreeTerms').checked) {
         showError('Please agree to the terms and conditions');
         return;
     }
